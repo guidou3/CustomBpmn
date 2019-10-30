@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <link rel="stylesheet" href="vendor/bpmn-js/assets/bpmn-font/css/bpmn.css" />
+  <link rel="stylesheet" href="vendor/bpmn-js/assets/diagram-js.css" />
+
+  <style type="text/css">
+    html, body, #canvas, #canvas > div {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .icon-custom-clock {
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><path d='M 15 15 h 50 v 50 h -50 v -50 h 5 m 0 5 h 40 v 40 h -40 v -40 h 20 m 0 1 a 15 15 79 0 0 0 38 a 15 15 79 0 0 0 -38  m 0 19 l 5 -10 m -5 10 l 12 10Z' fill='white' stroke='black' stroke-width='3'/></svg>");
+    }
+
+    .icon-custom-resource {
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 55 20 a 1 1 0 1 0 0 3 a 1 1 0 1 0 0 -3 m -10 0 a 1 1 0 0 0 0 3 a 1 1 0 0 0 0 -3 m 0 9 h 10 m 5 8 a 14 14 79 0 0 5 -10 a 6 6 79 0 0 -30 0 a 14 14 0 0 0 5 10 a 60 60 0 0 0 -15 50 h 50 a 60 60 0 0 0 -15 -50Z' fill='white' stroke='grey' stroke-width='3'/></svg>");
+    }
+
+    .icon-custom-resource-absence {
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 55 20 a 1 1 0 1 0 0 3 a 1 1 0 1 0 0 -3 m -10 0 a 1 1 0 0 0 0 3 a 1 1 0 0 0 0 -3 m 0 9 h 10 m 5 8 a 14 14 79 0 0 5 -10 a 6 6 79 0 0 -30 0 a 14 14 0 0 0 5 10 a 60 60 0 0 0 -15 50 h 50 a 60 60 0 0 0 -15 -50 M 20 8 l 60 83 M 80 8 l -60 83Z' fill='white' stroke='black' stroke-width='3'/></svg>");
+    }
+
+    .icon-custom-resource-instance {
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 55 20 a 1 1 0 1 0 0 3 a 1 1 0 1 0 0 -3 m -10 0 a 1 1 0 0 0 0 3 a 1 1 0 0 0 0 -3 m 0 9 h 10 m 5 8 a 14 14 79 0 0 5 -10 a 6 6 79 0 0 -30 0 a 14 14 0 0 0 5 10 a 60 60 0 0 0 -15 50 h 50 a 60 60 0 0 0 -15 -50Z' fill='white' stroke='black' stroke-width='3'/></svg>");
+    }
+
+    .icon-custom-role {
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 75 87 v -75 h -50 v 75 M 55 20 a 1 1 0 1 0 0 3 a 1 1 0 1 0 0 -3 m -10 0 a 1 1 0 0 0 0 3 a 1 1 0 0 0 0 -3 m 0 9 h 10 m 5 8 a 14 14 79 0 0 5 -10 a 6 6 79 0 0 -30 0 a 14 14 0 0 0 5 10 a 60 60 0 0 0 -15 50 h 50 a 60 60 0 0 0 -15 -50Z' fill='white' stroke='grey' stroke-width='3'/></svg>");
+    }
+
+    .icon-custom-role-absence {
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 75 87 v -75 h -50 v 75 M 75 87 l -50 -75 M 25 87 l 50 -75 M 55 20 a 1 1 0 1 0 0 3 a 1 1 0 1 0 0 -3 m -10 0 a 1 1 0 0 0 0 3 a 1 1 0 0 0 0 -3 m 0 9 h 10 m 5 8 a 14 14 79 0 0 5 -10 a 6 6 79 0 0 -30 0 a 14 14 0 0 0 5 10 a 60 60 0 0 0 -15 50 h 50 a 60 60 0 0 0 -15 -50Z' fill='white' stroke='black' stroke-width='3'/></svg>");
+    }
+
+    .icon-custom-role-instance {
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M 75 87 v -75 h -50 v 75 M 55 20 a 1 1 0 1 0 0 3 a 1 1 0 1 0 0 -3 m -10 0 a 1 1 0 0 0 0 3 a 1 1 0 0 0 0 -3 m 0 9 h 10 m 5 8 a 14 14 79 0 0 5 -10 a 6 6 79 0 0 -30 0 a 14 14 0 0 0 5 10 a 60 60 0 0 0 -15 50 h 50 a 60 60 0 0 0 -15 -50Z' fill='white' stroke='black' stroke-width='3'/></svg>");
+    }
+
+    .icon-custom-group {
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' style='fill:white; stroke:grey; stroke-width:3'><path d='M 62 36 a 14 14 79 0 0 5 -10 a 6 6 79 0 0 -30 0 a 14 14 79 0 0 5 10 a 60 60 0 0 0 -15 50 h 50  a 60 60 0 0 0 -15 -50 z' /><path d='M 57 38 a 14 14 79 0 0 5 -10 a 6 6 79 0 0 -30 0 a 14 14 79 0 0 5 10 a 60 60 0 0 0 -15 50 h 50  a 60 60 0 0 0 -15 -50 z' /></svg></svg>");
+    }
+
+    .icon-custom-group-absence {
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' style='fill:white; stroke:black; stroke-width:3'><path d='M 62 36 a 14 14 79 0 0 5 -10 a 6 6 79 0 0 -30 0 a 14 14 79 0 0 5 10 a 60 60 0 0 0 -15 50 h 50  a 60 60 0 0 0 -15 -50 z' /><path d='M 57 38 a 14 14 79 0 0 5 -10 a 6 6 79 0 0 -30 0 a 14 14 79 0 0 5 10 a 60 60 0 0 0 -15 50 h 50  a 60 60 0 0 0 -15 -50 M 20 15 l 60 78 M 80 15 l -60 78z' /></svg></svg>");
+    }
+
+    .icon-custom-group-instance {
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' style='fill:white; stroke:black; stroke-width:3'><path d='M 62 36 a 14 14 79 0 0 5 -10 a 6 6 79 0 0 -30 0 a 14 14 79 0 0 5 10 a 60 60 0 0 0 -15 50 h 50  a 60 60 0 0 0 -15 -50 z' /><path d='M 57 38 a 14 14 79 0 0 5 -10 a 6 6 79 0 0 -30 0 a 14 14 79 0 0 5 10 a 60 60 0 0 0 -15 50 h 50  a 60 60 0 0 0 -15 -50 z' /></svg></svg>");
+    }
+
+  </style>
+
+  <!--
+    this is an example of how to use bpmn-js in a standalone application built with
+    CommonJS modules + browserify
+  -->
+
+  <title>custom elements example - bpmn-js-examples</title>
+</head>
+<body>
+  <div id="canvas"></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

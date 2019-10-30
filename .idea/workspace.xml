@@ -1,14 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="b54437a8-9431-411b-8f9d-c0d9c259b27a" name="Default Changelist" comment="" />
+    <list default="true" id="d828e062-e667-4f47-8ea4-4ccbac7e9156" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ProjectId" id="1SgwMKyn5IvnAaPZ7GQRdUS1pdS" />
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="1SWLA5WQL0vaw0oM9IGezyDCw4F" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
@@ -22,6 +33,7 @@
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="settings.editor.selected.configurable" value="configurable.group.tools" />
+    <property name="ts.external.directory.path" value="C:\Program Files\JetBrains\WebStorm 2018.2.2\plugins\JavaScriptLanguage\jsLanguageServicesImpl\external" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -35,21 +47,57 @@
       </list>
     </option>
   </component>
+  <component name="RunManager">
+    <configuration name="dev" type="js.build_tools.npm" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+  </component>
   <component name="SvnConfiguration">
     <configuration />
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="b54437a8-9431-411b-8f9d-c0d9c259b27a" name="Default Changelist" comment="" />
-      <created>1571998497634</created>
+      <changelist id="d828e062-e667-4f47-8ea4-4ccbac7e9156" name="Default Changelist" comment="" />
+      <created>1571674258727</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1571998497634</updated>
-      <workItem from="1571998498909" duration="7868000" />
+      <updated>1571674258727</updated>
+      <workItem from="1571674259947" duration="499000" />
+      <workItem from="1571676074033" duration="2303000" />
+      <workItem from="1571734815619" duration="12107000" />
+      <workItem from="1571817436923" duration="17098000" />
+      <workItem from="1571902015443" duration="19090000" />
+      <workItem from="1571990742743" duration="5480000" />
+      <workItem from="1572079394575" duration="14515000" />
+      <workItem from="1572172221548" duration="19502000" />
+      <workItem from="1572254569591" duration="20769000" />
+      <workItem from="1572341350027" duration="9931000" />
+      <workItem from="1572424675713" duration="9000" />
+      <workItem from="1572427223392" duration="3063000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

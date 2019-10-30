@@ -7,6 +7,7 @@ import CustomRules from './CustomRules';
 import CustomUpdater from './CustomUpdater';
 import CustomLabelEditingProvider from "./CustomLabelEdingProvider";
 import CustomModeling from "./CustomModeling";
+import CustomConnect from "./CustomConnect";
 
 export default {
   __init__: [
@@ -16,8 +17,9 @@ export default {
     'customRules',
     'customUpdater',
     'paletteProvider',
-    'labelEditingProvider',
-    'modeling'
+    'customLabelEditingProvider',
+    'modeling',
+    'connect'
   ],
   contextPadProvider: [ 'type', CustomContextPadProvider ],
   customOrderingProvider: [ 'type', CustomOrderingProvider ],
@@ -26,6 +28,7 @@ export default {
   customUpdater: [ 'type', CustomUpdater ],
   elementFactory: [ 'type', CustomElementFactory ],
   paletteProvider: [ 'type', CustomPalette ],
-  labelEditingProvider: [ 'type', CustomLabelEditingProvider ],
+  customLabelEditingProvider: [ 'type', CustomLabelEditingProvider ],
   modeling: [ 'type', CustomModeling ],
+  connect: [ 'type', CustomConnect]
 };

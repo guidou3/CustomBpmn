@@ -1,6 +1,8 @@
 import $ from 'jquery';
 
-import pizzaDiagram from '../resources/pizza-collaboration.bpmn';
+import BpmnModeler from 'bpmn-js/lib/Modeler';
+
+import pizzaDiagram from '../resources/diag.bpmn';
 
 import customElements from './custom-elements.json';
 
@@ -60,6 +62,7 @@ function openDiagram(xml) {
         container
           .removeClass('with-error')
           .addClass('with-diagram');
+        modeler.addCustomElements(customElements);
         body.addClass('shown')
     }
 

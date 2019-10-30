@@ -124,11 +124,11 @@
     <semantic:participant id="_6-53" name="Pizza Customer" processRef="_6-2" />
     <semantic:participant id="_6-438" name="Pizza vendor" processRef="_6-1" />
     <semantic:messageFlow id="_6-638" name="pizza order" sourceRef="Task_1" targetRef="OrderReceivedEvent" />
-    <semantic:messageFlow id="_6-642" name="" sourceRef="Task_2" targetRef="_6-674" />
+    <semantic:messageFlow id="_6-642" name="prova2" sourceRef="Task_2" targetRef="_6-674" />
     <semantic:messageFlow id="_6-646" name="receipt" sourceRef="_6-565" targetRef="_6-304" />
     <semantic:messageFlow id="_6-648" name="money" sourceRef="_6-304" targetRef="_6-565" />
     <semantic:messageFlow id="_6-640" name="pizza" sourceRef="_6-514" targetRef="_6-202" />
-    <semantic:messageFlow id="_6-750" name="" sourceRef="CalmCustomerTask" targetRef="Task_2" />
+    <semantic:messageFlow id="_6-750" name="tell you what" sourceRef="CalmCustomerTask" targetRef="Task_2" />
   </semantic:collaboration>
   <bpmndi:BPMNDiagram id="Trisotech.Visio-_6" name="Untitled Diagram" documentation="" resolution="96.00000267028808">
     <bpmndi:BPMNPlane bpmnElement="C1275940932557">

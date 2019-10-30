@@ -1,109 +1,73 @@
 [
    {
-      "type":"custom:circle",
-      "id":"CustomCircle_1",
-      "x":806,
-      "y":210
+      "type": "custom:TimeSlot",
+      "x": 600,
+      "y": 215,
+      "text": "<5d"
    },
    {
-      "type":"custom:triangle",
-      "id":"CustomTriangle_1",
-      "x":300,
-      "y":300
-   },
-   {
-      "type":"custom:connection",
-      "id":"CustomConnection_2",
-      "waypoints":[
+      "type": "custom:ResourceArc",
+      "waypoints": [
          {
-            "original":{
-               "x":320,
-               "y":320
-            },
-            "x":330,
-            "y":320
+            "x": 619,
+            "y": 215
          },
          {
-            "x":469,
-            "y":320
-         },
-         {
-            "x":469,
-            "y":225
-         },
-         {
-            "original":{
-               "x":559,
-               "y":200
-            },
-            "x":517,
-            "y":212
+            "x": 501,
+            "y": 160
          }
       ],
-      "source":"CustomTriangle_1",
-      "target":"Task_2"
+      "source": "shape_12",
+      "target": "Task_0qvbgsr"
    },
    {
-      "type":"custom:connection",
-      "id":"CustomConnection_1",
-      "source":"CustomTriangle_1",
-      "target":"Task_1",
-      "waypoints":[
-         {
-            "original":{
-               "x":319,
-               "y":302
-            },
-            "x":319,
-            "y":302
-         },
-         {
-            "x":319,
-            "y":200
-         },
-         {
-            "x":309,
-            "y":200
-         },
-         {
-            "original":{
-               "x":309,
-               "y":145
-            },
-            "x":309,
-            "y":145
-         }
-      ]
+      "type": "custom:Resource",
+      "x": 785,
+      "y": 243
    },
    {
-      "type":"custom:connection",
-      "waypoints":[
+      "type": "custom:ResourceArc",
+      "waypoints": [
          {
-            "original":{
-               "x":876,
-               "y":280
-            },
-            "x":946,
-            "y":280
+            "x": 795,
+            "y": 274
          },
          {
-            "x":1028,
-            "y":280
-         },
-         {
-            "x":1028,
-            "y":111
-         },
-         {
-            "original":{
-               "x":876,
-               "y":111
-            },
-            "x":917,
-            "y":111
+            "x": 510,
+            "y": 147
          }
       ],
-      "source":"CustomCircle_1",
-      "target":"Task_3"
+      "source": "shape_16",
+      "target": "Task_0qvbgsr"
+   },
+   {
+      "type": "custom:ResourceArc",
+      "waypoints": [
+         {
+            "x": 787,
+            "y": 290
+         },
+         {
+            "x": 510,
+            "y": 395
+         }
+      ],
+      "source": "shape_16",
+      "target": "Task_1v5ajj3"
+   },
+   {
+      "type": "custom:TimeDistance",
+      "waypoints": [
+         {
+            "x": 455,
+            "y": 380
+         },
+         {
+            "x": 425,
+            "y": 160
+         }
+      ],
+      "source": "Task_1v5ajj3",
+      "target": "Task_0qvbgsr"
    }
 ]

@@ -9,24 +9,20 @@ import {isAny} from "bpmn-js/lib/features/modeling/util/ModelingUtil";
 import {assign} from "min-dash";
 import {DEFAULT_LABEL_SIZE, FLOW_LABEL_INDENT} from "bpmn-js/lib/util/LabelUtil";
 
+import {label, externalLabel} from "../Types";
+
 export function getLabel(element) {
     let semantic = element.businessObject
 
-    if (is(semantic, 'custom:resource'))
+    if (isAny(semantic, label))
         return semantic.text;
     else
         return basicGetLabel(element)
 }
 
 export function setLabel(element, text, isExternal) {
-    let types = [
-        'custom:resource'
-    ]
     let semantic = element.businessObject
-    console.log(element)
-    console.log(element.businessObject)
-
-    if (isAny(semantic, types)) {
+    if (isAny(semantic, label)) {
         semantic.text = text
         return element
     }
@@ -41,10 +37,6 @@ export function setLabel(element, text, isExternal) {
  * @return {Boolean} true if is label
  */
 export function isLabelExternal(semantic) {
-    let types = [
-        'custom:resource'
-    ]
-    // return is(semantic, 'custom:resource') || labelUtils.isLabelExternal(semantic)
     return is(semantic, 'bpmn:Event') ||
         is(semantic, 'bpmn:Gateway') ||
         is(semantic, 'bpmn:DataStoreReference') ||
@@ -54,7 +46,7 @@ export function isLabelExternal(semantic) {
         is(semantic, 'bpmn:SequenceFlow') ||
         is(semantic, 'bpmn:MessageFlow') ||
         is(semantic, 'bpmn:Group') ||
-        is(semantic, 'custom:resource');
+        isAny(semantic, externalLabel) ;
 }
 
 export function hasExternalLabel(element) {
@@ -96,36 +88,17 @@ export function getExternalLabelMid(element) {
  * @param {djs.model.Base} element
  */
 export function getExternalLabelBounds(semantic, element) {
-    return labelUtils.getExternalLabelBounds(semantic, element)
-    // var mid,
-    //     size,
-    //     bounds,
-    //     di = semantic.di,
-    //     label = di.label;
-    //
-    // if (label && label.bounds) {
-    //     bounds = label.bounds;
-    //
-    //     size = {
-    //         width: Math.max(DEFAULT_LABEL_SIZE.width, bounds.width),
-    //         height: bounds.height
-    //     };
-    //
-    //     mid = {
-    //         x: bounds.x + bounds.width / 2,
-    //         y: bounds.y + bounds.height / 2
-    //     };
-    // } else {
-    //
-    //     mid = getExternalLabelMid(element);
-    //
-    //     size = DEFAULT_LABEL_SIZE;
-    // }
-    //
-    // return assign({
-    //     x: mid.x - size.width / 2,
-    //     y: mid.y - size.height / 2
-    // }, size);
+    if(semantic.di)
+        return labelUtils.getExternalLabelBounds(semantic, element)
+    else {
+        let mid = getExternalLabelMid(element);
+        let size = DEFAULT_LABEL_SIZE;
+
+        return assign({
+            x: mid.x - size.width / 2,
+            y: mid.y - size.height / 2
+        }, size);
+    }
 }
 
 export function isLabel(element) {

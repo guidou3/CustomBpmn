@@ -2,28 +2,26 @@ import {
     assign
 } from 'min-dash';
 
-import { is, getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
-
-import {createCategoryValue} from 'bpmn-js/lib/features/modeling/behavior/util/CategoryUtil';
+import { is } from 'bpmn-js/lib/util/ModelUtil';
 import { isAny } from 'bpmn-js/lib/features/modeling/util/ModelingUtil';
 import { isExpanded } from 'bpmn-js/lib/util/DiUtil';
 
 import {
+    getLabel,
     getExternalLabelMid,
+    isLabelExternal,
     hasExternalLabel,
     isLabel
-} from 'bpmn-js/lib/util/LabelUtil';
-
-import {
-    isLabelExternal,
-    getLabel
 } from './utils/LabelUtil';
 
+import { directEdit, label} from "./Types";
+
+import LabelEditingProvider from "bpmn-js/lib/features/label-editing/LabelEditingProvider";
+
 export default function CustomLabelEditingProvider(
-    eventBus, bpmnFactory, canvas, directEditing,
+    eventBus, canvas, directEditing,
     modeling, resizeHandles, textRenderer) {
 
-    this._bpmnFactory = bpmnFactory;
     this._canvas = canvas;
     this._modeling = modeling;
     this._textRenderer = textRenderer;
@@ -37,10 +35,10 @@ export default function CustomLabelEditingProvider(
 
     // complete on followup canvas operation
     eventBus.on([
-        'autoPlace.start',
-        'canvas.viewbox.changing',
-        'drag.init',
         'element.mousedown',
+        'drag.init',
+        'canvas.viewbox.changing',
+        'autoPlace',
         'popupMenu.open'
     ], function(event) {
 
@@ -95,42 +93,29 @@ export default function CustomLabelEditingProvider(
         activateDirectEdit(event.shape);
     });
 
-
     function activateDirectEdit(element, force) {
+        let types = [
+            'bpmn:Task',
+            'bpmn:TextAnnotation',
+            'bpmn:Group'
+        ].concat(directEdit)
         if (force ||
-            isAny(element, [ 'bpmn:Task', 'bpmn:TextAnnotation', 'bpmn:Group' ]) ||
+            isAny(element, types) ||
             isCollapsedSubProcess(element)) {
-
             directEditing.activate(element);
         }
     }
-    // function activateDirectEdit(element, force) {
-    //     let types = [
-    //         'bpmn:Task',
-    //         'bpmn:TextAnnotation',
-    //         'bpmn:Group',
-    //         'custom:resource'
-    //     ]
-    //     if (force ||
-    //         isAny(element, types) ||
-    //         isCollapsedSubProcess(element)) {
-    //
-    //         directEditing.activate(element);
-    //     }
-    // }
 
 }
 
 CustomLabelEditingProvider.$inject = [
     'eventBus',
-    'bpmnFactory',
     'canvas',
     'directEditing',
     'modeling',
     'resizeHandles',
     'textRenderer'
 ];
-
 
 /**
  * Activate direct editing for activities and text annotations.
@@ -142,10 +127,12 @@ CustomLabelEditingProvider.$inject = [
 CustomLabelEditingProvider.prototype.activate = function(element) {
 
     // text
-    var text = getLabel(element);
-    if (element.type === 'custom:resource' && !text) {
+    let text = getLabel(element);
+
+    // CUSTOM
+    if(isAny(element, label) && !text)
         text = '';
-    }
+    //END_CUSTOM
 
     if (text === undefined) {
         return;
@@ -163,11 +150,14 @@ CustomLabelEditingProvider.prototype.activate = function(element) {
     var options = {};
 
     // tasks
-    if (isAny(element, [
+    if (
+        isAny(element, [
             'bpmn:Task',
             'bpmn:Participant',
             'bpmn:Lane',
-            'bpmn:CallActivity'
+            'bpmn:CallActivity',
+            //CUSTOM
+            //'custom:resource' // interni?
         ]) ||
         isCollapsedSubProcess(element)
     ) {
@@ -213,7 +203,6 @@ CustomLabelEditingProvider.prototype.getEditingBBox = function(element) {
     var target = element.label || element;
 
     var bbox = canvas.getAbsoluteBBox(target);
-
     var mid = {
         x: bbox.x + bbox.width / 2,
         y: bbox.y + bbox.height / 2
@@ -303,8 +292,8 @@ CustomLabelEditingProvider.prototype.getEditingBBox = function(element) {
         paddingTop = 7 * zoom,
         paddingBottom = 4 * zoom;
 
-    // external labels for events, data elements, gateways, groups and connections
-    if (target.labelTarget) {
+    // external labels for events, data elements, gateways and connections
+    if (target.labelTarget ) {
         assign(bounds, {
             width: width,
             height: bbox.height + paddingTop + paddingBottom,
@@ -374,51 +363,7 @@ CustomLabelEditingProvider.prototype.getEditingBBox = function(element) {
     return { bounds: bounds, style: style };
 };
 
-
-CustomLabelEditingProvider.prototype.update = function(
-    element, newLabel,
-    activeContextText, bounds) {
-
-    var newBounds,
-        bbox;
-
-    if (is(element, 'bpmn:TextAnnotation')) {
-
-        bbox = this._canvas.getAbsoluteBBox(element);
-
-        newBounds = {
-            x: element.x,
-            y: element.y,
-            width: element.width / bbox.width * bounds.width,
-            height: element.height / bbox.height * bounds.height
-        };
-    }
-
-    if (is(element, 'bpmn:Group')) {
-
-        var businessObject = getBusinessObject(element);
-
-        // initialize categoryValue if not existing
-        if (!businessObject.categoryValueRef) {
-
-            var rootElement = this._canvas.getRootElement(),
-                definitions = getBusinessObject(rootElement).$parent;
-
-            var categoryValue = createCategoryValue(definitions, this._bpmnFactory);
-
-            getBusinessObject(element).categoryValueRef = categoryValue;
-        }
-
-    }
-
-    if (isEmptyText(newLabel)) {
-        newLabel = null;
-    }
-
-    this._modeling.updateLabel(element, newLabel, newBounds);
-};
-
-
+CustomLabelEditingProvider.prototype.update = LabelEditingProvider.prototype.update
 
 // helpers //////////////////////
 

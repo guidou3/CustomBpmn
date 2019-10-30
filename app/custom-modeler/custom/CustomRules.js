@@ -9,12 +9,17 @@ import {
 } from 'bpmn-js/lib/util/ModelUtil';
 
 import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
+import {isAny} from "bpmn-js/lib/features/modeling/util/ModelingUtil";
 
 var HIGH_PRIORITY = 1500;
 
 
 function isCustom(element) {
   return element && /^custom:/.test(element.type);
+}
+
+function isConsequence(element) {
+  return element && (element.type === 'custom:ConsequenceFlow' || element.type === 'custom:ConsequenceTimedFlow')
 }
 
 /**
@@ -49,28 +54,52 @@ CustomRules.prototype.init = function() {
   /**
    * Can source and target be connected?
    */
-  function canConnect(source, target) {
+  function canConnect(source, target, type) {
 
     // only judge about custom elements
     if (!isCustom(source) && !isCustom(target)) {
-      return;
+      if(type) {
+        return { type: type };
+      }
+      else return;
     }
 
     // allow connection between custom shape and task
     if (isCustom(source)) {
-      if (is(target, 'bpmn:Task'))
-        return { type: 'custom:consequence' };
+      if (is(target, 'bpmn:Task')) {
+        return { type: 'custom:ResourceArc' };
+      }
       else
         return false;
 
     }
     else if (isCustom(target)) {
-      if (is(source, 'bpmn:Task'))
-        return { type: 'custom:consequence' };
+      if (is(source, 'bpmn:Task')) {
+        return { type: 'custom:ResourceArc' };
+      }
        else
         return false;
 
     }
+
+  }
+
+  function canReconnect(source, target, connection) {
+    if(!isCustom(connection) && !isCustom(source) && !isCustom(target))
+      return;
+    else if(isConsequence(connection) && !isCustom(source) && !isCustom(target)) {
+      console.log("all ok")
+      return { type: connection.type }
+    }
+
+    else {
+      console.log("should not")
+      console.log(connection.type)
+      console.log(isCustom(source))
+      console.log(isCustom(target))
+      return canConnect(source, target, connection.type)
+    }
+
   }
 
   this.addRule('elements.move', HIGH_PRIORITY, function(context) {
@@ -117,25 +146,27 @@ CustomRules.prototype.init = function() {
 
   this.addRule('connection.create', HIGH_PRIORITY, function(context) {
     var source = context.source,
-        target = context.target;
+        target = context.target,
+        type = context.type;
 
-    return canConnect(source, target);
+    return canConnect(source, target, type);
   });
 
-  this.addRule('connection.reconnectStart', HIGH_PRIORITY, function(context) {
+  this.addRule('connection.reconnectStart', HIGH_PRIORITY*2, function(context) {
     var connection = context.connection,
         source = context.hover || context.source,
         target = connection.target;
 
-    return canConnect(source, target, connection);
+    return canReconnect(source, target, connection);
   });
 
-  this.addRule('connection.reconnectEnd', HIGH_PRIORITY, function(context) {
+  this.addRule('connection.reconnectEnd', HIGH_PRIORITY*2, function(context) {
+    console.log("called re custom")
     var connection = context.connection,
         source = connection.source,
         target = context.hover || context.target;
 
-    return canConnect(source, target, connection);
+    return canReconnect(source, target, connection);
   });
 
 };

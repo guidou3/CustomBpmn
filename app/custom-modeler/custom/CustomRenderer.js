@@ -1,29 +1,20 @@
 import inherits from 'inherits';
 
 import BaseRenderer from 'diagram-js/lib/draw/BaseRenderer';
+import BpmnRenderer from "bpmn-js/lib/draw/BpmnRenderer";
 
-import {
-  componentsToPath,
-  createLine
-} from 'diagram-js/lib/util/RenderUtil';
+import {componentsToPath, createLine} from 'diagram-js/lib/util/RenderUtil';
 
-import {
-  query as domQuery
-} from 'min-dom';
+import {query as domQuery} from 'min-dom';
 
-import {
-  append as svgAppend,
-  attr as svgAttr,
-  classes as svgClasses,
-  create as svgCreate
-} from 'tiny-svg';
+import {append as svgAppend, attr as svgAttr, classes as svgClasses, create as svgCreate} from 'tiny-svg';
 import {getFillColor, getSemantic, getStrokeColor} from "bpmn-js/lib/draw/BpmnRenderUtil";
 import {assign} from "min-dash";
-import {getLabel} from "./utils/LabelUtil";
+import Ids from 'ids';
+import {getLabel} from "./utils/LabelUtil"
+import BaseElementFactory from "diagram-js/lib/core/ElementFactory";
 
 // import * as svg from 'tiny-svg'
-
-import Ids from 'ids';
 
 var RENDERER_IDS = new Ids();
 
@@ -76,15 +67,13 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
   }
 
   function renderExternalLabel(parentGfx, element) {
-    var semantic = getSemantic(element);
     var box = {
       width: 90,
       height: 10,
       x: element.width / 2 + element.x,
       y: element.height /2 + element.y
     };
-
-    return renderLabel(parentGfx, semantic.text, {
+    return renderLabel(parentGfx, getLabel(element), {
       box: box,
       fitBox: true,
       style: assign(
@@ -292,8 +281,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     return path;
   }
 
-  this.drawTimeSlot = function(p, width, height) {
-
+  function drawTimeSlot(width, height) {
     var attrs = computeStyle(attrs, {
       stroke: '#000',
       strokeWidth: 2,
@@ -303,464 +291,592 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     var polygon = svgCreate('rect');
 
     svgAttr(polygon, {
-      width: width, //120
-      height: height, //40 ideally
-	  rx: 30,
-	  ry: 30
+      width: width,
+      height: height,
+      rx: 20,
+      ry: 20
     });
 
     svgAttr(polygon, attrs);
 
-    svgAppend(p, polygon);
-
-    return polygon;
-  };
-
-  this.drawClock = function(p, width, height){
-
-    var attrs = computeStyle(attrs, {
-      stroke: '#000',
-      strokeWidth: 2,
-      fill: '#fff'
-    });
-
-    var path = svgCreate('path');
-
-    var d = [
-      ['M', 0 , 0],
-      ['h', 50 ],
-      ['v', 50 ],
-      ['h', -50 ],
-      ['v', -50 ],
-      ['h', 5 ],
-      ['m', 0, 5],
-      ['h', 40 ],
-      ['v', 40 ],
-      ['h', -40 ],
-      ['v', -40 ],
-      ['h', 20 ],
-      ['m', 0, 1],
-      ['a', 15, 15, 79, 0, 0, 0, 38],
-      ['a', 15, 15, 79, 0, 0, 0, -38],
-      ['m', 0 , 19],
-      ['l', 5, -10 ],
-      ['m', -5 , 10],
-      ['l', 12, 10 ],
-      ['z']
-    ]
-
-    svgAttr(path, {
-      width: width,
-      height: height,
-      d: componentsToPath(d)
-    });
-
-    svgAttr(path, attrs);
-
-    svgAppend(p, path);
-
-    return path;
-  };
-
-  this.drawResourceDefault = function(p, element, color) {
-
-    var attrs = computeStyle(attrs, {
-      stroke: color,
-      strokeWidth: 2,
-      fill: '#fff'
-    });
-
-    var path = svgCreate('path');
-
-    var d = [
-      ['M', 30 , 8],
-      ['a', 1, 1, 0, 1, 0, 0, 3],
-      ['a', 1, 1, 0, 1, 0, 0, -3],
-      ['M', 20 , 8],
-      ['a', 1, 1, 0, 1, 0, 0, 3],
-      ['a', 1, 1, 0, 1, 0, 0, -3],
-      ['M', 20 , 17],
-      ['h', 10 ],
-      ['M', 35 , 25],
-      ['a', 14, 14, 79, 0, 0, 5, -10],
-      ['a', 6, 6, 79, 0, 0, -30, 0],
-      ['a', 14, 14, 79, 0, 0, 5, 10],
-      ['a', 60, 60, 0, 0, 0, -15, 50],
-      ['h', 50 ],
-      ['a', 60, 60, 0, 0, 0, -15, -50],
-      ['z']
-    ]
-
-    svgAttr(path, {
-      width: element.width,
-      height: element.height,
-      d: componentsToPath(d),
-      text: 'prova'
-    });
-
-    svgAttr(path, attrs);
-
-    svgAppend(p, path);
-    renderExternalLabel(p, element);
-
-    return path;
-  };
-
-  this.drawResource = function(p, element) {
-    return this.drawResourceDefault(p, element, '#808080')
+    return polygon
   }
 
-  this.drawResourceInstance = function(p, element) {
-    return this.drawResourceDefault(p, element, '#000')
-  }
+  var renderers = this.renderers = {
+    'custom:TimeSlot': (p, element) => {
+      let polygon = drawTimeSlot(element.width, element.height)
 
-  this.drawResourceAbsence = function(p, width, height) {
+      svgAppend(p, polygon);
+      renderEmbeddedLabel(p, element, 'center-middle');
 
-    var attrs = computeStyle(attrs, {
-      stroke: '#000',
-      strokeWidth: 2,
-      fill: '#fff'
-    });
+      return polygon;
+    },
+    'custom:Clock': (p, element) => {
 
-    var path = svgCreate('path');
+      var attrs = computeStyle(attrs, {
+        stroke: '#000',
+        strokeWidth: 2,
+        fill: '#fff'
+      });
 
-    var d = [
-      ['M', 30 , 8],
-      ['a', 1, 1, 0, 1, 0, 0, 3],
-      ['a', 1, 1, 0, 1, 0, 0, -3],
-      ['M', 20 , 8],
-      ['a', 1, 1, 0, 1, 0, 0, 3],
-      ['a', 1, 1, 0, 1, 0, 0, -3],
-      ['M', 20 , 17],
-      ['h', 10 ],
-      ['M', 35 , 25],
-      ['a', 14, 14, 79, 0, 0, 5, -10],
-      ['a', 6, 6, 79, 0, 0, -30, 0],
-      ['a', 14, 14, 79, 0, 0, 5, 10],
-      ['a', 60, 60, 0, 0, 0, -15, 50],
-      ['h', 50 ],
-      ['a', 60, 60, 0, 0, 0, -15, -50],
-      ['M', -5 , -5],
-      ['l', 60, 85],
-      ['M', 55 , -5],
-      ['l', -60, 85],
-      ['z']
-    ]
+      var path = svgCreate('path');
 
-    svgAttr(path, {
-      width: width,
-      height: height,
-      d: componentsToPath(d)
-    });
+      var d = [
+        ['M', 0 , 0],
+        ['h', 50 ],
+        ['v', 50 ],
+        ['h', -50 ],
+        ['v', -50 ],
+        ['h', 5 ],
+        ['m', 0, 5],
+        ['h', 40 ],
+        ['v', 40 ],
+        ['h', -40 ],
+        ['v', -40 ],
+        ['h', 20 ],
+        ['m', 0, 1],
+        ['a', 15, 15, 79, 0, 0, 0, 38],
+        ['a', 15, 15, 79, 0, 0, 0, -38],
+        ['m', 0 , 19],
+        ['l', 5, -10 ],
+        ['m', -5 , 10],
+        ['l', 12, 10 ],
+        ['z']
+      ]
 
-    svgAttr(path, attrs);
+      svgAttr(path, {
+        width: element.width,
+        height: element.height,
+        d: componentsToPath(d)
+      });
 
-    svgAppend(p, path);
+      svgAttr(path, attrs);
 
-    return path;
-  };
+      svgAppend(p, path);
 
-  this.drawRoleDefault = function(p, width, height, color) {
+      return path;
+    },
+    'custom:Resource': (p, element, color='#808080') => {
+      var attrs = computeStyle(attrs, {
+        stroke: color,
+        strokeWidth: 2,
+        fill: '#fff'
+      });
 
-    var attrs = computeStyle(attrs, {
-      stroke: color,
-      strokeWidth: 2,
-      fill: '#fff'
-    });
+      var path = svgCreate('path');
 
-    var path = svgCreate('path');
+      var d = [
+        ['M', 30 , 8],
+        ['a', 1, 1, 0, 1, 0, 0, 3],
+        ['a', 1, 1, 0, 1, 0, 0, -3],
+        ['M', 20 , 8],
+        ['a', 1, 1, 0, 1, 0, 0, 3],
+        ['a', 1, 1, 0, 1, 0, 0, -3],
+        ['M', 20 , 17],
+        ['h', 10 ],
+        ['M', 35 , 25],
+        ['a', 14, 14, 79, 0, 0, 5, -10],
+        ['a', 6, 6, 79, 0, 0, -30, 0],
+        ['a', 14, 14, 79, 0, 0, 5, 10],
+        ['a', 60, 60, 0, 0, 0, -15, 50],
+        ['h', 50 ],
+        ['a', 60, 60, 0, 0, 0, -15, -50],
+        ['z']
+      ];
 
-    var d = [
-      ['M', 54 , 78],
-      ['v', -78],
-      ['h', -54],
-      ['v', 78],
-      ['h', 54],
-      ['v', -5],
-      ['M', 32 , 11],
-      ['a', 1, 1, 0, 1, 0, 0, 3],
-      ['a', 1, 1, 0, 1, 0, 0, -3],
-      ['m', -10 , 0],
-      ['a', 1, 1, 0, 1, 0, 0, 3],
-      ['a', 1, 1, 0, 1, 0, 0, -3],
-      ['m', 0 , 9],
-      ['h', 10 ],
-      ['m', 5 , 8],
-      ['a', 14, 14, 79, 0, 0, 5, -10],
-      ['a', 6, 6, 79, 0, 0, -30, 0],
-      ['a', 14, 14, 79, 0, 0, 5, 10],
-      ['a', 60, 60, 0, 0, 0, -15, 50],
-      ['h', 50 ],
-      ['a', 60, 60, 0, 0, 0, -15, -50],
-      ['z']
-    ]
+      svgAttr(path, {
+        width: element.width,
+        height: element.height,
+        d: componentsToPath(d),
+        id: 'Resource_' + rendererId
+      });
 
-    svgAttr(path, {
-      width: width,
-      height: height,
-      d: componentsToPath(d)
-    });
+      svgAttr(path, attrs);
 
-    svgAttr(path, attrs);
+      svgAppend(p, path);
 
-    svgAppend(p, path);
+      return path;
+    },
+    'custom:ResourceAbsence': (p, element) => {
+      var attrs = computeStyle(attrs, {
+        stroke: '#000',
+        strokeWidth: 2,
+        fill: '#fff'
+      });
 
-    return path;
-  };
+      var path = svgCreate('path');
 
-  this.drawRole = function(p, width, height) {
-    return this.drawRoleDefault(p, width, height, '#808080')
-  }
-
-  this.drawRoleInstance = function(p, width, height) {
-    return this.drawRoleDefault(p, width, height, '#000')
-  }
-
-  this.drawRoleAbsence = function(p, width, height) {
-
-    var attrs = computeStyle(attrs, {
-      stroke: '#000',
-      strokeWidth: 2,
-      fill: '#fff'
-    });
-
-    var path = svgCreate('path');
-
-    var d = [
-      ['M', 54 , 78],
-      ['v', -78],
-      ['h', -54],
-      ['v', 78],
-      ['h', 54],
-      ['v', -5],
-      ['M', 32 , 11],
-      ['a', 1, 1, 0, 1, 0, 0, 3],
-      ['a', 1, 1, 0, 1, 0, 0, -3],
-      ['m', -10 , 0],
-      ['a', 1, 1, 0, 1, 0, 0, 3],
-      ['a', 1, 1, 0, 1, 0, 0, -3],
-      ['m', 0 , 9],
-      ['h', 10 ],
-      ['m', 5 , 8],
-      ['a', 14, 14, 79, 0, 0, 5, -10],
-      ['a', 6, 6, 79, 0, 0, -30, 0],
-      ['a', 14, 14, 79, 0, 0, 5, 10],
-      ['a', 60, 60, 0, 0, 0, -15, 50],
-      ['h', 50 ],
-      ['a', 60, 60, 0, 0, 0, -15, -50],
-      ['M', 0 , 0],
-      ['l', 54, 78],
-      ['M', 54 , 0],
-      ['l', -54, 78],
-      ['z']
-    ]
-
-    svgAttr(path, {
-      width: width,
-      height: height,
-      d: componentsToPath(d)
-    });
-
-    svgAttr(path, attrs);
-
-    svgAppend(p, path);
-
-    return path;
-  };
-
-  this.drawGroup = function(p, width, height, color, bool) {
-
-    var attrs = computeStyle(attrs, {
-      stroke: color,
-      strokeWidth: 2,
-      fill: '#fff'
-    });
-    var inner = svgCreate('svg')
-    var path1 = svgCreate('path');
-    var path2 = svgCreate('path');
-
-    var d1 = [
-      ['M', 42 , 26],
-      ['a', 14, 14, 79, 0, 0, 5, -10],
-      ['a', 6, 6, 79, 0, 0, -30, 0],
-      ['a', 14, 14, 79, 0, 0, 5, 10],
-      ['a', 60, 60, 0, 0, 0, -15, 50],
-      ['h', 50 ],
-      ['a', 60, 60, 0, 0, 0, -15, -50],
-      ['z']
-    ]
-
-    var d2 = [
-      ['M', 37 , 28],
-      ['a', 14, 14, 79, 0, 0, 5, -10],
-      ['a', 6, 6, 79, 0, 0, -30, 0],
-      ['a', 14, 14, 79, 0, 0, 5, 10],
-      ['a', 60, 60, 0, 0, 0, -15, 50],
-      ['h', 50 ],
-      ['a', 60, 60, 0, 0, 0, -15, -50],
-      ['z']
-    ]
-
-    if(bool) {
-      d2 = d2.concat([
+      var d = [
+        ['M', 30 , 8],
+        ['a', 1, 1, 0, 1, 0, 0, 3],
+        ['a', 1, 1, 0, 1, 0, 0, -3],
+        ['M', 20 , 8],
+        ['a', 1, 1, 0, 1, 0, 0, 3],
+        ['a', 1, 1, 0, 1, 0, 0, -3],
+        ['M', 20 , 17],
+        ['h', 10 ],
+        ['M', 35 , 25],
+        ['a', 14, 14, 79, 0, 0, 5, -10],
+        ['a', 6, 6, 79, 0, 0, -30, 0],
+        ['a', 14, 14, 79, 0, 0, 5, 10],
+        ['a', 60, 60, 0, 0, 0, -15, 50],
+        ['h', 50 ],
+        ['a', 60, 60, 0, 0, 0, -15, -50],
         ['M', -5 , -5],
-        ['l', 65, 90],
-        ['M', 60 , -5],
-        ['l', -65, 90],
-      ])
-    }
-    svgAttr(inner, {
-      width: width,
-      height: height
-    });
-    svgAttr(path1, {
-      width: width-5,
-      height: height-2,
-      d: componentsToPath(d1)
-    });
-    svgAttr(path2, {
-      width: width-5,
-      height: height-2,
-      d: componentsToPath(d2)
-    });
+        ['l', 60, 85],
+        ['M', 55 , -5],
+        ['l', -60, 85],
+        ['z']
+      ]
 
-    svgAttr(path1, attrs);
-    svgAttr(path2, attrs);
+      svgAttr(path, {
+        width: element.width,
+        height: element.height,
+        d: componentsToPath(d)
+      });
 
-    svgAppend(inner, path1);
-    svgAppend(inner, path2);
+      svgAttr(path, attrs);
 
-    svgAppend(p, inner);
+      svgAppend(p, path);
 
-    return inner;
-  };
+      return path;
+    },
+    'custom:ResourceInstance': (p, element) => {
+      return renderers['custom:Resource'](p, element, '#000')
+    },
+    'custom:Role': (p, element, color='#808080') => {
 
-  this.getClockPath = function(element) {
-    var x = element.x,
-        y = element.y,
-        width = element.width,
-        height = element.height;
+      var attrs = computeStyle(attrs, {
+        stroke: color,
+        strokeWidth: 2,
+        fill: '#fff'
+      });
 
-    var d = [
-      ['M', x , y],
-      ['h', 50 ],
-      ['v', 50 ],
-      ['h', -50 ],
-      ['v', -50 ],
-      ['z']
-    ]
+      var path = svgCreate('path');
 
-    return componentsToPath(d);
-  };
+      var d = [
+        ['M', 54 , 78],
+        ['v', -78],
+        ['h', -54],
+        ['v', 78],
+        ['h', 54],
+        ['v', -5],
+        ['M', 32 , 11],
+        ['a', 1, 1, 0, 1, 0, 0, 3],
+        ['a', 1, 1, 0, 1, 0, 0, -3],
+        ['m', -10 , 0],
+        ['a', 1, 1, 0, 1, 0, 0, 3],
+        ['a', 1, 1, 0, 1, 0, 0, -3],
+        ['m', 0 , 9],
+        ['h', 10 ],
+        ['m', 5 , 8],
+        ['a', 14, 14, 79, 0, 0, 5, -10],
+        ['a', 6, 6, 79, 0, 0, -30, 0],
+        ['a', 14, 14, 79, 0, 0, 5, 10],
+        ['a', 60, 60, 0, 0, 0, -15, 50],
+        ['h', 50 ],
+        ['a', 60, 60, 0, 0, 0, -15, -50],
+        ['z']
+      ];
 
-  this.getResourcePath = function(element) {
-    var x = element.x,
-        y = element.y,
-        width = element.width,
-        height = element.height;
+      svgAttr(path, {
+        width: element.width,
+        height: element.height,
+        d: componentsToPath(d)
+      });
 
-    var resourcePath = [
-      ['M', x+35 , y+25],
-      ['a', 14, 14, 79, 0, 0, 5, -10],
-      ['a', 6, 6, 79, 0, 0, -30, 0],
-      ['a', 14, 14, 79, 0, 0, 5, 10],
-      ['a', 60, 60, 0, 0, 0, -15, 50],
-      ['h', 50 ],
-      ['a', 60, 60, 0, 0, 0, -15, -50],
-      ['z']
-    ];
+      svgAttr(path, attrs);
 
-    return componentsToPath(resourcePath);
-  };
+      svgAppend(p, path);
 
-  this.getRolePath = function(element) {
-    var x = element.x,
-        y = element.y,
-        width = element.width,
-        height = element.height;
+      return path;
+    },
+    'custom:RoleAbsence': (p, element) => {
 
+      var attrs = computeStyle(attrs, {
+        stroke: '#000',
+        strokeWidth: 2,
+        fill: '#fff'
+      });
 
-    var resourcePath = [
-      ['M', x , y],
-      ['v', 78],
-      ['h', 54],
-      ['v', -78],
-      ['h', -54],
-      ['z']
-    ];
+      var path = svgCreate('path');
 
-    return componentsToPath(resourcePath);
-  };
+      var d = [
+        ['M', 54 , 78],
+        ['v', -78],
+        ['h', -54],
+        ['v', 78],
+        ['h', 54],
+        ['v', -5],
+        ['M', 32 , 11],
+        ['a', 1, 1, 0, 1, 0, 0, 3],
+        ['a', 1, 1, 0, 1, 0, 0, -3],
+        ['m', -10 , 0],
+        ['a', 1, 1, 0, 1, 0, 0, 3],
+        ['a', 1, 1, 0, 1, 0, 0, -3],
+        ['m', 0 , 9],
+        ['h', 10 ],
+        ['m', 5 , 8],
+        ['a', 14, 14, 79, 0, 0, 5, -10],
+        ['a', 6, 6, 79, 0, 0, -30, 0],
+        ['a', 14, 14, 79, 0, 0, 5, 10],
+        ['a', 60, 60, 0, 0, 0, -15, 50],
+        ['h', 50 ],
+        ['a', 60, 60, 0, 0, 0, -15, -50],
+        ['M', 0 , 0],
+        ['l', 54, 78],
+        ['M', 54 , 0],
+        ['l', -54, 78],
+        ['z']
+      ]
 
-  this.getGroupPath = function(element) {
-    var x = element.x,
-        y = element.y,
-        width = element.width,
-        height = element.height;
+      svgAttr(path, {
+        width: element.width,
+        height: element.height,
+        d: componentsToPath(d)
+      });
 
-    var resourcePath = [
-      ['M', x+42 , y+26],
-      ['a', 14, 14, 79, 0, 0, 5, -10],
-      ['a', 6, 6, 79, 0, 0, -30, 0],
-      ['a', 14, 14, 79, 0, 0, 5, 10],
-      ['a', 60, 60, 0, 0, 0, -15, 50],
-      ['h', 50 ],
-      ['a', 60, 60, 0, 0, 0, -15, -50],
-      ['M', x+37 , y+28],
-      ['a', 14, 14, 79, 0, 0, 5, -10],
-      ['a', 6, 6, 79, 0, 0, -30, 0],
-      ['a', 14, 14, 79, 0, 0, 5, 10],
-      ['a', 60, 60, 0, 0, 0, -15, 50],
-      ['h', 50 ],
-      ['a', 60, 60, 0, 0, 0, -15, -50],
-      ['z']
-    ];
+      svgAttr(path, attrs);
 
-    return componentsToPath(resourcePath);
-  };
+      svgAppend(p, path);
 
-  this.drawResourceArc = function(p, element) {
-    var attrs = computeStyle(attrs, {
-      stroke: BLACK,
-      strokeWidth: 1.5,
-      strokeDasharray: [10,10]
-    });
+      return path;
+    },
+    'custom:RoleInstance': (p, element) => {
+      return renderers['custom:Role'](p, element, '#000')
+    },
+    'custom:Group': (p, element, color='#808080', bool=false) => {
+      var attrs = computeStyle(attrs, {
+        stroke: color,
+        strokeWidth: 2,
+        fill: '#fff'
+      });
+      var inner = svgCreate('svg')
+      var path1 = svgCreate('path');
+      var path2 = svgCreate('path');
 
-    return svgAppend(p, createLine(element.waypoints, attrs));
-  };
+      var d1 = [
+        ['M', 42 , 26],
+        ['a', 14, 14, 79, 0, 0, 5, -10],
+        ['a', 6, 6, 79, 0, 0, -30, 0],
+        ['a', 14, 14, 79, 0, 0, 5, 10],
+        ['a', 60, 60, 0, 0, 0, -15, 50],
+        ['h', 50 ],
+        ['a', 60, 60, 0, 0, 0, -15, -50],
+        ['z']
+      ]
 
-  this.drawConsequenceFlow = function (p, element) {
-    var pathData = createPathFromConnection(element);
-    var attrs = {
-      strokeLinejoin: 'round',
-      markerEnd: marker('sequenceflow-end', 'white', BLACK),
-      stroke: BLACK
-    };
+      var d2 = [
+        ['M', 37 , 28],
+        ['a', 14, 14, 79, 0, 0, 5, -10],
+        ['a', 6, 6, 79, 0, 0, -30, 0],
+        ['a', 14, 14, 79, 0, 0, 5, 10],
+        ['a', 60, 60, 0, 0, 0, -15, 50],
+        ['h', 50 ],
+        ['a', 60, 60, 0, 0, 0, -15, -50],
+        ['z']
+      ]
 
-    let path = drawPath(p, pathData, attrs);
-    var sequenceFlow = getSemantic(element);
-    console.log(sequenceFlow)
-
-    return path
-  }
-
-  this.getResourceArcPath = function(connection) {
-    var waypoints = connection.waypoints.map(function(p) {
-      return p.original || p;
-    });
-
-    var connectionPath = [
-      ['M', waypoints[0].x, waypoints[0].y]
-    ];
-
-    waypoints.forEach(function(waypoint, index) {
-      if (index !== 0) {
-        connectionPath.push(['L', waypoint.x, waypoint.y]);
+      if(bool) {
+        d2 = d2.concat([
+          ['M', -5 , -5],
+          ['l', 65, 90],
+          ['M', 60 , -5],
+          ['l', -65, 90],
+        ])
       }
-    });
+      svgAttr(inner, {
+        width: element.width,
+        height: element.height
+      });
+      svgAttr(path1, {
+        width: element.width-5,
+        height: element.height-2,
+        d: componentsToPath(d1)
+      });
+      svgAttr(path2, {
+        width: element.width-5,
+        height: element.height-2,
+        d: componentsToPath(d2)
+      });
 
-    return componentsToPath(connectionPath);
+      svgAttr(path1, attrs);
+      svgAttr(path2, attrs);
+
+      svgAppend(inner, path1);
+      svgAppend(inner, path2);
+
+      svgAppend(p, inner);
+
+      return inner;
+    },
+    'custom:GroupAbsence': (p, element) => {
+      return renderers['custom:Group'](p, element, '#000', true)
+    },
+    'custom:GroupInstance': (p, element) => {
+      return renderers['custom:Group'](p, element, '#000')
+    },
+    'custom:TaskTimed': (p, element) => {
+      var attrs = {
+        fill: '#fff',
+        stroke: '#000'
+      };
+      let new_element = Object.assign({type: 'bpmn:Activity'}, element)
+      var rect = BpmnRenderer.prototype.drawShape(p, new_element);
+      console.log(rect)
+      // renderEmbeddedLabel(p, element, 'center-middle');
+      // attachTaskMarkers(parentGfx, element);
+
+      return rect;
+    },
+    'custom:ResourceArc': (p, element) => {
+      var attrs = computeStyle(attrs, {
+        stroke: BLACK,
+        strokeWidth: 1.5,
+        strokeDasharray: [5,5]
+      });
+
+      return svgAppend(p, createLine(element.waypoints, attrs));
+    },
+    'custom:ConsequenceFlow': (p, element) => {
+      var pathData = createPathFromConnection(element);
+      var attrs = {
+        strokeLinejoin: 'round',
+        markerEnd: marker('sequenceflow-end', 'white', BLACK),
+        stroke: BLACK,
+        strokeWidth: 1.5,
+        strokeDasharray: [5,5]
+      };
+
+      return drawPath(p, pathData, attrs);
+    },
+    'custom:TimeDistance': (p, element) => {
+      var pathData = createPathFromConnection(element);
+      var attrs = {
+        strokeLinejoin: 'round',
+        markerEnd: marker('sequenceflow-end', 'white', BLACK),
+        markerStart: marker('association-start', 'white', BLACK),
+        stroke: BLACK,
+        strokeWidth: 1.5,
+        strokeDasharray: [5,5]
+      };
+
+      return drawPath(p, pathData, attrs);
+    },
+    // 'custom:ConsequenceTimedFlow': (p, element) => {
+    //   var waypoints = element.waypoints;
+    //   let midX = (waypoints[0].x + waypoints[1].x) /2;
+    //   let midY = (waypoints[0].y + waypoints[1].y) /2;
+    //   if(waypoints.length === 2) {
+    //
+    //     element.waypoints[3] = element.waypoints[1]
+    //     if(element[0].x < element[1].x) {
+    //       element.waypoints[1] = { x: midX - 50, y: midY }
+    //       element.waypoints[2] = { x: midX + 50, y: midY }
+    //     }
+    //     else {
+    //       element.waypoints[1] = { x: midX + 50, y: midY }
+    //       element.waypoints[2] = { x: midX - 50, y: midY }
+    //     }
+    //   }
+    //   let  pathData = 'm  ' + waypoints[0].x + ',' + waypoints[0].y;
+    //   for (let i = 1; i < waypoints.length; i++) {
+    //     pathData += 'L' + waypoints[i].x + ',' + waypoints[i].y + ' ';
+    //   }
+    //
+    //   let borderRadius = 30,
+    //       width = 100,
+    //       height = 30;
+    //
+    //   var roundRectPath = [
+    //     ['M', x + borderRadius, y],
+    //     ['l', width - borderRadius * 2, 0],
+    //     ['a', borderRadius, borderRadius, 0, 0, 1, borderRadius, borderRadius],
+    //     ['l', 0, height - borderRadius * 2],
+    //     ['a', borderRadius, borderRadius, 0, 0, 1, -borderRadius, borderRadius],
+    //     ['l', borderRadius * 2 - width, 0],
+    //     ['a', borderRadius, borderRadius, 0, 0, 1, -borderRadius, -borderRadius],
+    //     ['l', 0, borderRadius * 2 - height],
+    //     ['a', borderRadius, borderRadius, 0, 0, 1, borderRadius, -borderRadius],
+    //     ['z']];
+    //
+    //
+    //   var attrs = {
+    //     strokeLinejoin: 'round',
+    //     markerEnd: marker('sequenceflow-end', 'white', BLACK),
+    //     stroke: BLACK,
+    //     strokeWidth: 1.5,
+    //     strokeDasharray: [5,5]
+    //   };
+    //
+    //   return drawPath(p, pathData, attrs);
+    // },
+    'label': (p, element) => {
+      return renderExternalLabel(p, element);
+    },
   };
+
+  var paths = this.paths = {
+    'custom:TimeSlot': (shape) => {
+      var x = shape.x,
+          y = shape.y,
+          width = shape.width,
+          height = shape.height,
+          borderRadius = 20;
+
+      var roundRectPath = [
+        ['M', x + borderRadius, y],
+        ['l', width - borderRadius * 2, 0],
+        ['a', borderRadius, borderRadius, 0, 0, 1, borderRadius, borderRadius],
+        ['l', 0, height - borderRadius * 2],
+        ['a', borderRadius, borderRadius, 0, 0, 1, -borderRadius, borderRadius],
+        ['l', borderRadius * 2 - width, 0],
+        ['a', borderRadius, borderRadius, 0, 0, 1, -borderRadius, -borderRadius],
+        ['l', 0, borderRadius * 2 - height],
+        ['a', borderRadius, borderRadius, 0, 0, 1, borderRadius, -borderRadius],
+        ['z']
+      ];
+
+      return componentsToPath(roundRectPath);
+    },
+    'custom:Clock': (element) => {
+      var x = element.x,
+          y = element.y,
+          width = element.width,
+          height = element.height;
+
+      var d = [
+        ['M', x , y],
+        ['h', 50 ],
+        ['v', 50 ],
+        ['h', -50 ],
+        ['v', -50 ],
+        ['z']
+      ]
+
+      return componentsToPath(d);
+    },
+    'custom:Resource': (element) => {
+      var x = element.x,
+          y = element.y,
+          width = element.width,
+          height = element.height;
+
+      var resourcePath = [
+        ['M', x+35 , y+25],
+        ['a', 14, 14, 79, 0, 0, 5, -10],
+        ['a', 6, 6, 79, 0, 0, -30, 0],
+        ['a', 14, 14, 79, 0, 0, 5, 10],
+        ['a', 60, 60, 0, 0, 0, -15, 50],
+        ['h', 50 ],
+        ['a', 60, 60, 0, 0, 0, -15, -50],
+        ['z']
+      ];
+
+      return componentsToPath(resourcePath);
+    },
+    'custom:ResourceAbsence': (element) => {
+      return paths['custom:Resource'](element)
+    },
+    'custom:ResourceInstance': (element) => {
+      return paths['custom:Resource'](element)
+    },
+    'custom:Role': (element) => {
+      var x = element.x,
+          y = element.y,
+          width = element.width,
+          height = element.height;
+
+
+      var resourcePath = [
+        ['M', x , y],
+        ['v', 78],
+        ['h', 54],
+        ['v', -78],
+        ['h', -54],
+        ['z']
+      ];
+
+      return componentsToPath(resourcePath);
+    },
+    'custom:RoleAbsence': (element) => {
+      return paths['custom:Role'](element)
+    },
+    'custom:RoleInstance': (element) => {
+      return paths['custom:Role'](element)
+    },
+    'custom:Group': (element) => {
+      var x = element.x,
+          y = element.y,
+          width = element.width,
+          height = element.height;
+
+      var resourcePath = [
+        ['M', x+42 , y+26],
+        ['a', 14, 14, 79, 0, 0, 5, -10],
+        ['a', 6, 6, 79, 0, 0, -30, 0],
+        ['a', 14, 14, 79, 0, 0, 5, 10],
+        ['a', 60, 60, 0, 0, 0, -15, 50],
+        ['h', 50 ],
+        ['a', 60, 60, 0, 0, 0, -15, -50],
+        ['M', x+37 , y+28],
+        ['a', 14, 14, 79, 0, 0, 5, -10],
+        ['a', 6, 6, 79, 0, 0, -30, 0],
+        ['a', 14, 14, 79, 0, 0, 5, 10],
+        ['a', 60, 60, 0, 0, 0, -15, 50],
+        ['h', 50 ],
+        ['a', 60, 60, 0, 0, 0, -15, -50],
+        ['z']
+      ];
+
+      return componentsToPath(resourcePath);
+    },
+    'custom:GroupAbsence': (element) => {
+      return paths['custom:Group'](element)
+    },
+    'custom:GroupInstance': (element) => {
+      return paths['custom:Group'](element)
+    },
+    'custom:ResourceArc': (connection) => {
+      var waypoints = connection.waypoints.map(function(p) {
+        return p.original || p;
+      });
+
+      var connectionPath = [
+        ['M', waypoints[0].x, waypoints[0].y]
+      ];
+
+      waypoints.forEach(function(waypoint, index) {
+        if (index !== 0) {
+          connectionPath.push(['L', waypoint.x, waypoint.y]);
+        }
+      });
+
+      return componentsToPath(connectionPath);
+    },
+    'custom:ConsequenceFlow': (connection) => {
+      return paths['custom:ResourceArc'](connection)
+    },
+    'custom:TimeDistance': (connection) => {
+      return paths['custom:ResourceArc'](connection)
+    },
+    'label': (element) => {
+      var x = element.x,
+          y = element.y,
+          width = element.width,
+          height = element.height;
+
+      var rectPath = [
+        ['M', x, y],
+        ['l', width, 0],
+        ['l', 0, height],
+        ['l', -width, 0],
+        ['z']
+      ];
+
+      return componentsToPath(rectPath);
+    }
+  }
 }
 
 inherits(CustomRenderer, BaseRenderer);
@@ -768,99 +884,43 @@ inherits(CustomRenderer, BaseRenderer);
 CustomRenderer.$inject = [ 'eventBus', 'styles', 'canvas', 'textRenderer' ];
 
 CustomRenderer.prototype.canRender = function(element) {
-  return /^custom:/.test(element.type);
+  return /^custom:/.test(element.type) || element.type === 'label';
 };
 
 CustomRenderer.prototype.drawShape = function(p, element) {
   var type = element.type;
+  var h = this.renderers[type];
 
-  if (type === 'custom:clock') {
-    return this.drawClock(p, element.width, element.height);
-  }
-
-  if (type === 'custom:resource') {
-    return this.drawResource(p, element);
-  }
-
-  if (type === 'custom:resource-absence') {
-    return this.drawResourceAbsence(p, element.width, element.height);
-  }
-
-  if (type === 'custom:resource-instance') {
-    return this.drawResourceInstance(p, element);
-  }
-
-  if (type === 'custom:role') {
-    return this.drawRole(p, element.width, element.height);
-  }
-
-  if (type === 'custom:role-absence') {
-    return this.drawRoleAbsence(p, element.width, element.height);
-  }
-
-  if (type === 'custom:role-instance') {
-    return this.drawRoleInstance(p, element.width, element.height);
-  }
-
-  if (type === 'custom:group') {
-    return this.drawGroup(p, element.width, element.height, '#808080', false);
-  }
-
-  if (type === 'custom:group-absence') {
-    return this.drawGroup(p, element.width, element.height, '#000', true);
-  }
-
-  if (type === 'custom:group-instance') {
-    return this.drawGroup(p, element.width, element.height, '#000', false);
-  }
-
-
-
+  /* jshint -W040 */
+  return h(p, element);
 };
 
 CustomRenderer.prototype.getShapePath = function(shape) {
   var type = shape.type;
+  var h = this.paths[type];
 
-  if (type === 'custom:clock') {
-    return this.getClockPath(shape);
-  }
-
-  if (type === 'custom:resource' || type === 'custom:resource-absence' || type === 'custom:resource-instance') {
-    return this.getResourcePath(shape);
-  }
-
-  if (type === 'custom:role' || type === 'custom:role-absence' || type === 'custom:role-instance') {
-    return this.getRolePath(shape);
-  }
-
-  if (type === 'custom:group' || type === 'custom:group-absence' || type === 'custom:group-instance') {
-    return this.getGroupPath(shape);
-  }
-
-
+  /* jshint -W040 */
+  return h(shape);
 };
 
 CustomRenderer.prototype.drawConnection = function(p, element) {
-
   var type = element.type;
+  var h = this.renderers[type];
 
-  if (type === 'custom:resource-arc') {
-    return this.drawResourceArc(p, element);
-  }
-
-  if (type === 'custom:consequence') {
-    return this.drawConsequenceFlow(p, element);
-  }
-
-
+  /* jshint -W040 */
+  return h(p, element);
 };
 
 CustomRenderer.prototype.getConnectionPath = function(connection) {
-
   var type = connection.type;
+  var h = this.paths[type];
 
-  if (type === 'custom:resource-arc' || type === 'custom:consequence' ) {
-    return this.getResourceArcPath(connection);
-  }
+  /* jshint -W040 */
+  return h(connection);
+  // var type = connection.type;
+  //
+  // if (type === 'custom:ResourceArc' || type === 'custom:ConsequenceFlow' ) {
+  //   return this.getResourceArcPath(connection);
+  // }
 
 };

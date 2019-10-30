@@ -1,14 +1,11 @@
 import {
     getLabel,
     setLabel,
-    isLabelExternal
-} from '../utils/LabelUtil';
-
-import {
     getExternalLabelMid,
+    isLabelExternal,
     hasExternalLabel,
     isLabel
-} from 'bpmn-js/lib/util/LabelUtil';
+} from '../utils/LabelUtil';
 
 import {is} from "bpmn-js/lib/util/ModelUtil";
 
@@ -32,7 +29,6 @@ export default function CustomUpdateLabelHandler(modeling, textRenderer) {
      * @param {String} text
      */
     function setText(element, text) {
-        console.log(element)
         // external label if present
         var label = element.label || element;
 
@@ -61,10 +57,8 @@ export default function CustomUpdateLabelHandler(modeling, textRenderer) {
                 x: labelCenter.x,
                 y: labelCenter.y + paddingTop
             };
+
             businessObject.id = element.id
-            console.log("element vs bo => bo miss id / manually added here")
-            console.log(element)
-            console.log(businessObject)
             modeling.createLabel(element, labelCenter, {
                 id: businessObject.id + '_label',
                 businessObject: businessObject

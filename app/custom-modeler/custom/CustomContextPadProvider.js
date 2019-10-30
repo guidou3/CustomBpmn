@@ -2,6 +2,8 @@ import inherits from 'inherits';
 
 import ContextPadProvider from 'bpmn-js/lib/features/context-pad/ContextPadProvider';
 
+import {is} from "bpmn-js/lib/util/ModelUtil";
+
 import {
   isAny
 } from 'bpmn-js/lib/features/modeling/util/ModelingUtil';
@@ -10,6 +12,9 @@ import {
   assign,
   bind
 } from 'min-dash';
+import {isLabel} from "./utils/LabelUtil";
+
+import {resourceLabel} from "./Types";
 
 
 export default function CustomContextPadProvider(injector, connect, translate) {
@@ -26,20 +31,15 @@ export default function CustomContextPadProvider(injector, connect, translate) {
       connect.start(event, element, autoActivate);
     }
 
-    let types = [
-        'custom:clock',
-        'custom:resource',
-        'custom:resource-absence',
-        'custom:resource-instance',
-        'custom:role',
-        'custom:role-absence',
-        'custom:role-instance',
-        'custom:group',
-        'custom:group-absence',
-        'custom:group-instance'
-    ]
+    function startConnectConsequence(event, element, autoActivate) {
+      connect.customStart(event, element, 'custom:ConsequenceFlow', autoActivate);
+    }
 
-    if (isAny(businessObject, types)) {
+    function startConnectConsequenceTimed(event, element, autoActivate) {
+      connect.customStart(event, element, 'custom:ConsequenceTimedFlow', autoActivate);
+    }
+
+    if (isAny(businessObject, resourceLabel) && element.type !== 'label') {
           assign(actions, {
               'connect': {
                   group: 'connect',
@@ -51,7 +51,21 @@ export default function CustomContextPadProvider(injector, connect, translate) {
                   }
               }
           });
+
       }
+    if(is(businessObject, 'bpmn:BaseElement') && element.type !== 'label') {
+        assign(actions, {
+            'connect1': {
+                group: 'connect',
+                className: 'bpmn-icon-connection-multi',
+                title: translate('Connect using custom connection'),
+                action: {
+                    click: startConnectConsequence,
+                    dragstart: startConnectConsequence
+                }
+            }
+        });
+    }
 
     return actions;
   };

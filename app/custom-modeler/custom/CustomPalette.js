@@ -121,34 +121,37 @@ PaletteProvider.prototype.getPaletteEntries = function(element) {
       separator: true
     },
     'custom-clock': createAction(
-        'custom:clock', 'custom', 'icon-custom-clock'
+        'custom:Clock', 'custom', 'icon-custom-clock'
+    ),
+    'custom-time-slot': createAction(
+        'custom:TimeSlot', 'custom', 'icon-custom-time-slot'
     ),
     'custom-resource': createAction(
-        'custom:resource', 'custom', 'icon-custom-resource'
+        'custom:Resource', 'custom', 'icon-custom-resource'
     ),
     'custom-resource-absence': createAction(
-        'custom:resource-absence', 'custom', 'icon-custom-resource-absence'
+        'custom:ResourceAbsence', 'custom', 'icon-custom-resource-absence'
     ),
     'custom-resource-instance': createAction(
-        'custom:resource-instance', 'custom', 'icon-custom-resource-instance'
+        'custom:ResourceInstance', 'custom', 'icon-custom-resource-instance'
     ),
     'custom-role': createAction(
-        'custom:role', 'custom', 'icon-custom-role'
+        'custom:Role', 'custom', 'icon-custom-role'
     ),
     'custom-role-absence': createAction(
-        'custom:role-absence', 'custom', 'icon-custom-role-absence'
+        'custom:RoleAbsence', 'custom', 'icon-custom-role-absence'
     ),
     'custom-role-instance': createAction(
-        'custom:role-instance', 'custom', 'icon-custom-role-instance'
+        'custom:RoleInstance', 'custom', 'icon-custom-role-instance'
     ),
     'custom-group': createAction(
-        'custom:group', 'custom', 'icon-custom-group'
+        'custom:Group', 'custom', 'icon-custom-group'
     ),
     'custom-group-absence': createAction(
-        'custom:group-absence', 'custom', 'icon-custom-group-absence'
+        'custom:GroupAbsence', 'custom', 'icon-custom-group-absence'
     ),
     'custom-group-instance': createAction(
-        'custom:group-instance', 'custom', 'icon-custom-group-instance'
+        'custom:GroupInstance', 'custom', 'icon-custom-group-instance'
     ),
   });
 

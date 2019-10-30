@@ -7,7 +7,11 @@ import {
 
 import inherits from 'inherits';
 
+import {connections} from "./custom/Types";
+
 import CustomModule from './custom';
+import {isLabelExternal, getExternalLabelBounds} from "./custom/utils/LabelUtil";
+import {getLabel} from "./custom/utils/LabelUtil";
 
 
 export default function CustomModeler(options) {
@@ -19,10 +23,10 @@ export default function CustomModeler(options) {
 inherits(CustomModeler, Modeler);
 
 CustomModeler.prototype._modules = [].concat(
-  CustomModeler.prototype._modules,
-  [
-    CustomModule
-  ]
+    CustomModeler.prototype._modules,
+    [
+      CustomModule
+    ]
 );
 
 /**
@@ -40,13 +44,15 @@ CustomModeler.prototype._addCustomShape = function(customElement) {
   var customAttrs = assign({ businessObject: customElement }, customElement);
 
   var customShape = elementFactory.create('shape', customAttrs);
+  if (isLabelExternal(customElement) && getLabel(customShape)) {
+    this.addLabel(customElement, customShape);
+  }
 
   return canvas.addShape(customShape);
 
 };
 
 CustomModeler.prototype._addCustomConnection = function(customElement) {
-
   this._customElements.push(customElement);
 
   var canvas = this.get('canvas'),
@@ -56,10 +62,14 @@ CustomModeler.prototype._addCustomConnection = function(customElement) {
   var customAttrs = assign({ businessObject: customElement }, customElement);
 
   var connection = elementFactory.create('connection', assign(customAttrs, {
-    source: elementRegistry.get(customElement.source),
-    target: elementRegistry.get(customElement.target)
-  }),
-  elementRegistry.get(customElement.source).parent);
+        source: elementRegistry.get(customElement.source),
+        target: elementRegistry.get(customElement.target)
+      }),
+      elementRegistry.get(customElement.source).parent);
+  if (isLabelExternal(customElement) && getLabel(connection)) {
+    this.addLabel(customElement, connection);
+  }
+  // console.log(connection)
 
   return canvas.addConnection(connection);
 
@@ -94,6 +104,50 @@ CustomModeler.prototype.addCustomElements = function(customElements) {
   connections.forEach(this._addCustomConnection, this);
 };
 
+function elementData(semantic, attrs) {
+  return assign({
+    id: semantic.id,
+    type: semantic.$type,
+    businessObject: semantic
+  }, attrs);
+}
+
+/**
+ * add label for an element
+ */
+CustomModeler.prototype.addLabel = function(semantic, element) {
+  var bounds,
+      text,
+      label;
+
+  var canvas = this.get('canvas'),
+      elementFactory = this.get('elementFactory'),
+      textRenderer = this.get('textRenderer')
+
+  bounds = getExternalLabelBounds(semantic, element);
+
+  text = getLabel(element);
+
+  if (text) {
+
+    // get corrected bounds from actual layouted text
+    bounds = textRenderer.getExternalLabelBounds(bounds, text);
+  }
+
+  label = elementFactory.createLabel(elementData(semantic, {
+    id: semantic.id + '_label',
+    labelTarget: element,
+    type: 'label',
+    hidden: element.hidden || !getLabel(element),
+    x: Math.round(bounds.x),
+    y: Math.round(bounds.y),
+    width: Math.round(bounds.width),
+    height: Math.round(bounds.height)
+  }));
+
+  return canvas.addShape(label, element.parent);
+};
+
 /**
  * Get custom elements with their current status.
  *
@@ -103,7 +157,12 @@ CustomModeler.prototype.getCustomElements = function() {
   return this._customElements;
 };
 
+CustomModeler.prototype.clear = function() {
+  this._customElements = [];
+  Modeler.prototype.clear.call(this)
+};
+
 
 function isCustomConnection(element) {
-  return element.type === 'custom:consequence';
+  return connections.includes(element.type)
 }
