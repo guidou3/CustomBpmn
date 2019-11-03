@@ -13,6 +13,7 @@ import {assign} from "min-dash";
 import Ids from 'ids';
 import {getLabel} from "./utils/LabelUtil"
 import BaseElementFactory from "diagram-js/lib/core/ElementFactory";
+import {isCustomConnection, isCustomShape} from "./Types";
 
 // import * as svg from 'tiny-svg'
 
@@ -37,7 +38,6 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
   var markers = {};
 
   function renderLabel(parentGfx, label, options) {
-
     options = assign({
       size: {
         width: 100
@@ -174,6 +174,40 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
       });
     }
 
+    if (type === 'timedistance-start') {
+      var sequenceflowEnd = svgCreate('path');
+      svgAttr(sequenceflowEnd, { d: 'M -10 -5 L 20 10 L -10 25 L 20 10  Z' });
+
+      addMarker(id, {
+        element: sequenceflowEnd,
+        ref: { x: 5, y: 10 },
+        scale: 0.8,
+        attrs: {
+          fill: '#fff',
+          stroke: stroke,
+          strokeWidth: 1.5,
+          fillOpacity: 0
+        }
+      });
+    }
+
+    if (type === 'timedistance-end') {
+      var sequenceflowEnd = svgCreate('path');
+      svgAttr(sequenceflowEnd, { d: 'M 35 0 L 0 15 L 35 30 L 0 15  Z' });
+
+      addMarker(id, {
+        element: sequenceflowEnd,
+        ref: { x: 14, y: 15 },
+        scale: 0.8,
+        attrs: {
+          fill: '#fff',
+          stroke: stroke,
+          strokeWidth: 1.5,
+          fillOpacity: 0
+        }
+      });
+    }
+
     if (type === 'messageflow-start') {
       var messageflowStart = svgCreate('circle');
       svgAttr(messageflowStart, { cx: 6, cy: 6, r: 3.5 });
@@ -302,6 +336,19 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     return polygon
   }
 
+  function drawTimeDistanceArc(p, element, options) {
+    var pathData = createPathFromConnection(element);
+    var attrs = {
+      strokeLinejoin: 'round',
+      stroke: BLACK,
+      strokeWidth: 1.5
+    };
+
+    attrs = assign(attrs, options)
+
+    return drawPath(p, pathData, attrs);
+  }
+
   var renderers = this.renderers = {
     'custom:TimeSlot': (p, element) => {
       let polygon = drawTimeSlot(element.width, element.height)
@@ -356,9 +403,9 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
 
       return path;
     },
-    'custom:Resource': (p, element, color='#808080') => {
+    'custom:Resource': (p, element) => {
       var attrs = computeStyle(attrs, {
-        stroke: color,
+        stroke: '#000',
         strokeWidth: 2,
         fill: '#fff'
       });
@@ -441,13 +488,10 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
 
       return path;
     },
-    'custom:ResourceInstance': (p, element) => {
-      return renderers['custom:Resource'](p, element, '#000')
-    },
-    'custom:Role': (p, element, color='#808080') => {
+    'custom:Role': (p, element) => {
 
       var attrs = computeStyle(attrs, {
-        stroke: color,
+        stroke: '#000',
         strokeWidth: 2,
         fill: '#fff'
       });
@@ -542,12 +586,9 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
 
       return path;
     },
-    'custom:RoleInstance': (p, element) => {
-      return renderers['custom:Role'](p, element, '#000')
-    },
-    'custom:Group': (p, element, color='#808080', bool=false) => {
+    'custom:Group': (p, element, bool=false) => {
       var attrs = computeStyle(attrs, {
-        stroke: color,
+        stroke: '#000',
         strokeWidth: 2,
         fill: '#fff'
       });
@@ -611,110 +652,79 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
       return inner;
     },
     'custom:GroupAbsence': (p, element) => {
-      return renderers['custom:Group'](p, element, '#000', true)
+      return renderers['custom:Group'](p, element, true)
     },
-    'custom:GroupInstance': (p, element) => {
-      return renderers['custom:Group'](p, element, '#000')
-    },
-    'custom:TaskTimed': (p, element) => {
-      var attrs = {
-        fill: '#fff',
-        stroke: '#000'
-      };
-      let new_element = Object.assign({type: 'bpmn:Activity'}, element)
-      var rect = BpmnRenderer.prototype.drawShape(p, new_element);
-      console.log(rect)
-      // renderEmbeddedLabel(p, element, 'center-middle');
-      // attachTaskMarkers(parentGfx, element);
-
-      return rect;
-    },
+    // 'custom:TaskTimed': (p, element) => {
+    //   var attrs = {
+    //     fill: '#fff',
+    //     stroke: '#000'
+    //   };
+    //   let new_element = Object.assign({type: 'bpmn:Activity'}, element)
+    //   var rect = BpmnRenderer.prototype.drawShape(p, new_element);
+    //   console.log(rect)
+    //   // renderEmbeddedLabel(p, element, 'center-middle');
+    //   // attachTaskMarkers(parentGfx, element);
+    //
+    //   return rect;
+    // },
     'custom:ResourceArc': (p, element) => {
       var attrs = computeStyle(attrs, {
         stroke: BLACK,
         strokeWidth: 1.5,
-        strokeDasharray: [5,5]
+        strokeDasharray: [10,7]
       });
 
       return svgAppend(p, createLine(element.waypoints, attrs));
     },
     'custom:ConsequenceFlow': (p, element) => {
-      var pathData = createPathFromConnection(element);
       var attrs = {
         strokeLinejoin: 'round',
         markerEnd: marker('sequenceflow-end', 'white', BLACK),
         stroke: BLACK,
         strokeWidth: 1.5,
-        strokeDasharray: [5,5]
+        strokeDasharray: [8,5]
       };
 
-      return drawPath(p, pathData, attrs);
+      return svgAppend(p, createLine(element.waypoints, attrs));
     },
-    'custom:TimeDistance': (p, element) => {
-      var pathData = createPathFromConnection(element);
+    'custom:TimeDistanceArcStart': (p, element) => {
       var attrs = {
-        strokeLinejoin: 'round',
-        markerEnd: marker('sequenceflow-end', 'white', BLACK),
-        markerStart: marker('association-start', 'white', BLACK),
-        stroke: BLACK,
-        strokeWidth: 1.5,
-        strokeDasharray: [5,5]
+        markerStart: marker('timedistance-start', 'white', BLACK),
       };
 
-      return drawPath(p, pathData, attrs);
+      return drawTimeDistanceArc(p, element, attrs)
+
     },
-    // 'custom:ConsequenceTimedFlow': (p, element) => {
-    //   var waypoints = element.waypoints;
-    //   let midX = (waypoints[0].x + waypoints[1].x) /2;
-    //   let midY = (waypoints[0].y + waypoints[1].y) /2;
-    //   if(waypoints.length === 2) {
-    //
-    //     element.waypoints[3] = element.waypoints[1]
-    //     if(element[0].x < element[1].x) {
-    //       element.waypoints[1] = { x: midX - 50, y: midY }
-    //       element.waypoints[2] = { x: midX + 50, y: midY }
-    //     }
-    //     else {
-    //       element.waypoints[1] = { x: midX + 50, y: midY }
-    //       element.waypoints[2] = { x: midX - 50, y: midY }
-    //     }
-    //   }
-    //   let  pathData = 'm  ' + waypoints[0].x + ',' + waypoints[0].y;
-    //   for (let i = 1; i < waypoints.length; i++) {
-    //     pathData += 'L' + waypoints[i].x + ',' + waypoints[i].y + ' ';
-    //   }
-    //
-    //   let borderRadius = 30,
-    //       width = 100,
-    //       height = 30;
-    //
-    //   var roundRectPath = [
-    //     ['M', x + borderRadius, y],
-    //     ['l', width - borderRadius * 2, 0],
-    //     ['a', borderRadius, borderRadius, 0, 0, 1, borderRadius, borderRadius],
-    //     ['l', 0, height - borderRadius * 2],
-    //     ['a', borderRadius, borderRadius, 0, 0, 1, -borderRadius, borderRadius],
-    //     ['l', borderRadius * 2 - width, 0],
-    //     ['a', borderRadius, borderRadius, 0, 0, 1, -borderRadius, -borderRadius],
-    //     ['l', 0, borderRadius * 2 - height],
-    //     ['a', borderRadius, borderRadius, 0, 0, 1, borderRadius, -borderRadius],
-    //     ['z']];
-    //
-    //
-    //   var attrs = {
-    //     strokeLinejoin: 'round',
-    //     markerEnd: marker('sequenceflow-end', 'white', BLACK),
-    //     stroke: BLACK,
-    //     strokeWidth: 1.5,
-    //     strokeDasharray: [5,5]
-    //   };
-    //
-    //   return drawPath(p, pathData, attrs);
-    // },
+    'custom:TimeDistanceArcEnd': (p, element) => {
+      var attrs = {
+        markerEnd: marker('timedistance-end', 'white', BLACK),
+      };
+
+      return drawTimeDistanceArc(p, element, attrs)
+
+    },
     'label': (p, element) => {
       return renderExternalLabel(p, element);
     },
   };
+
+  // function getConnectionPath(connection) {
+  //   var waypoints = connection.waypoints.map(function(p) {
+  //     return p.original || p;
+  //   });
+  //
+  //   var connectionPath = [
+  //     ['M', waypoints[0].x, waypoints[0].y]
+  //   ];
+  //
+  //   waypoints.forEach(function(waypoint, index) {
+  //     if (index !== 0) {
+  //       connectionPath.push(['L', waypoint.x, waypoint.y]);
+  //     }
+  //   });
+  //
+  //   return componentsToPath(connectionPath);
+  // }
 
   var paths = this.paths = {
     'custom:TimeSlot': (shape) => {
@@ -778,9 +788,6 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     'custom:ResourceAbsence': (element) => {
       return paths['custom:Resource'](element)
     },
-    'custom:ResourceInstance': (element) => {
-      return paths['custom:Resource'](element)
-    },
     'custom:Role': (element) => {
       var x = element.x,
           y = element.y,
@@ -800,9 +807,6 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
       return componentsToPath(resourcePath);
     },
     'custom:RoleAbsence': (element) => {
-      return paths['custom:Role'](element)
-    },
-    'custom:RoleInstance': (element) => {
       return paths['custom:Role'](element)
     },
     'custom:Group': (element) => {
@@ -834,32 +838,15 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     'custom:GroupAbsence': (element) => {
       return paths['custom:Group'](element)
     },
-    'custom:GroupInstance': (element) => {
-      return paths['custom:Group'](element)
-    },
-    'custom:ResourceArc': (connection) => {
-      var waypoints = connection.waypoints.map(function(p) {
-        return p.original || p;
-      });
-
-      var connectionPath = [
-        ['M', waypoints[0].x, waypoints[0].y]
-      ];
-
-      waypoints.forEach(function(waypoint, index) {
-        if (index !== 0) {
-          connectionPath.push(['L', waypoint.x, waypoint.y]);
-        }
-      });
-
-      return componentsToPath(connectionPath);
-    },
-    'custom:ConsequenceFlow': (connection) => {
-      return paths['custom:ResourceArc'](connection)
-    },
-    'custom:TimeDistance': (connection) => {
-      return paths['custom:ResourceArc'](connection)
-    },
+    // 'custom:ResourceArc': (connection) => {
+    //   return getConnectionPath(connection)
+    // },
+    // 'custom:ConsequenceFlow': (connection) => {
+    //   return paths['custom:ResourceArc'](connection)
+    // },
+    // 'custom:TimeDistance': (connection) => {
+    //   return paths['custom:ResourceArc'](connection)
+    // },
     'label': (element) => {
       var x = element.x,
           y = element.y,
@@ -912,15 +899,25 @@ CustomRenderer.prototype.drawConnection = function(p, element) {
 };
 
 CustomRenderer.prototype.getConnectionPath = function(connection) {
-  var type = connection.type;
-  var h = this.paths[type];
-
-  /* jshint -W040 */
-  return h(connection);
   // var type = connection.type;
+  // var h = this.paths[type];
   //
-  // if (type === 'custom:ResourceArc' || type === 'custom:ConsequenceFlow' ) {
-  //   return this.getResourceArcPath(connection);
-  // }
+  // /* jshint -W040 */
+  // return h(connection);
+  var waypoints = connection.waypoints.map(function(p) {
+    return p.original || p;
+  });
+
+  var connectionPath = [
+    ['M', waypoints[0].x, waypoints[0].y]
+  ];
+
+  waypoints.forEach(function(waypoint, index) {
+    if (index !== 0) {
+      connectionPath.push(['L', waypoint.x, waypoint.y]);
+    }
+  });
+
+  return componentsToPath(connectionPath);
 
 };

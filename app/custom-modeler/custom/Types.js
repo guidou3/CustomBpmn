@@ -1,17 +1,21 @@
 export const label = [
-    'custom:ResourceInstance',
-    'custom:RoleInstance',
-    'custom:GroupInstance',
-    'custom:ConsequenceFlow',
+    'custom:Resource',
+    'custom:ResourceAbsence',
+    'custom:Role',
+    'custom:RoleAbsence',
+    'custom:Group',
+    'custom:GroupAbsence',
     'custom:Clock',
     'custom:TimeSlot'
 ]
 
 export const externalLabel = [
-    'custom:ResourceInstance',
-    'custom:RoleInstance',
-    'custom:GroupInstance',
-    'custom:ConsequenceFlow',
+    'custom:Resource',
+    'custom:ResourceAbsence',
+    'custom:Role',
+    'custom:RoleAbsence',
+    'custom:Group',
+    'custom:GroupAbsence',
     'custom:Clock'
 ]
 
@@ -21,22 +25,54 @@ export const connections = [
 ]
 
 export const directEdit = [
-    'custom:ResourceInstance',
-    'custom:RoleInstance',
-    'custom:GroupInstance',
+    // 'custom:Resource',
+    // 'custom:Role',
+    // 'custom:Group',
     'custom:Clock'
 ]
 
-export const resourceLabel = [
+export const resourceArcElements = [
     'custom:Clock',
     'custom:Resource',
     'custom:ResourceAbsence',
-    'custom:ResourceInstance',
     'custom:Role',
     'custom:RoleAbsence',
-    'custom:RoleInstance',
     'custom:Group',
     'custom:GroupAbsence',
-    'custom:GroupInstance',
     'custom:TimeSlot'
 ]
+
+export const custom = [
+    'custom:Clock',
+    'custom:Resource',
+    'custom:ResourceAbsence',
+    'custom:Role',
+    'custom:RoleAbsence',
+    'custom:Group',
+    'custom:GroupAbsence',
+    'custom:TimeSlot',
+    'custom:ResourceArc',
+    'custom:ConsequenceFlow',
+    'custom:TimeDistanceArcStart'
+]
+
+export function isCustomShape(type) {
+    if (typeof type === 'object')
+        type = type.type
+
+    return type.includes('custom:') && !connections.includes(type)
+}
+
+export function isCustomConnection(type) {
+    if (typeof type === 'object') {
+        type = type.type
+    }
+    return type.includes('custom:') && connections.includes(type)
+}
+
+export function isCustomResourceArcElement(type) {
+    if (typeof type === 'object') {
+        type = type.type
+    }
+    return resourceArcElements.includes(type)
+}

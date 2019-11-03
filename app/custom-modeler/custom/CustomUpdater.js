@@ -46,7 +46,6 @@ export default function CustomUpdater(eventBus, modeling, bpmnjs) {
   }
 
   function updateCustomConnection(e) {
-
     var context = e.context,
         connection = context.connection,
         source = connection.source,

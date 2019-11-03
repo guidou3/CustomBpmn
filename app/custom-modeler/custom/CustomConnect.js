@@ -1,6 +1,9 @@
 import {
+    asTRBL,
     getMid
 } from 'diagram-js/lib/layout/LayoutUtil';
+import {getNewShapePosition} from "bpmn-js/lib/features/auto-place/AutoPlaceUtil";
+import {assign} from "min-dash";
 
 
 export default function CustomConnect(eventBus, dragging, modeling, rules) {
@@ -8,6 +11,7 @@ export default function CustomConnect(eventBus, dragging, modeling, rules) {
     // rules
 
     function canConnect(source, target, type) {
+        console.log("called cr")
         return rules.allowed('connection.create', {
             source: source,
             target: target,
@@ -45,6 +49,7 @@ export default function CustomConnect(eventBus, dragging, modeling, rules) {
         var context = event.context,
             source = context.source,
             sourcePosition = context.sourcePosition,
+            elementFactory = context.elementFactory,
             target = context.target,
             targetPosition = {
                 x: event.x,
@@ -63,9 +68,32 @@ export default function CustomConnect(eventBus, dragging, modeling, rules) {
             };
 
         if (typeof canExecute === 'object') {
-            attrs = canExecute;
+            if(canExecute.type1) {
+                // crea shape
+                console.log("here")
+                let shape = elementFactory.createShape({ type: 'custom:TimeSlot' });
+                let pos = {
+                    x: (sourcePosition.x + targetPosition.x)/2,
+                    y: (sourcePosition.y + targetPosition.y)/2,
+                }
+                console.log(pos)
+                let newShape = modeling.appendShape(source, shape, pos, source.parent, {
+                    connection: { type: canExecute.type1}
+                });
+
+                hints = {
+                    connectionStart: pos,
+                    connectionEnd: targetPosition
+                }
+                attrs = { type: canExecute.type2}
+                modeling.connect(newShape, target, attrs, hints);
+                return;
+            }
+            else
+                attrs = canExecute;
         }
-        modeling.connect(source, target, attrs, hints);
+        if(!canExecute.type1)
+            modeling.connect(source, target, attrs, hints);
     });
 
 
@@ -85,6 +113,7 @@ export default function CustomConnect(eventBus, dragging, modeling, rules) {
             autoActivate = sourcePosition;
             sourcePosition = getMid(source);
         }
+        console.log(autoActivate)
 
         dragging.init(event, 'connect', {
             autoActivate: autoActivate,
@@ -98,10 +127,11 @@ export default function CustomConnect(eventBus, dragging, modeling, rules) {
         });
     };
 
-    this.customStart = function(event, source, type, sourcePosition, autoActivate) {
+    this.customStart = function(event, source, type, elementFactory, autoActivate) {
+        let sourcePosition = getMid(source);
         if (typeof sourcePosition !== 'object') {
             autoActivate = sourcePosition;
-            sourcePosition = getMid(source);
+
         }
 
         dragging.init(event, 'connect', {
@@ -111,7 +141,27 @@ export default function CustomConnect(eventBus, dragging, modeling, rules) {
                 context: {
                     source: source,
                     sourcePosition: sourcePosition,
-                    type: type
+                    type: type,
+                    elementFactory: elementFactory
+                }
+            }
+        });
+    };
+
+    this.customStart2 = function(event, source, type, elementFactory, sourcePosition, autoActivate) {
+        if (typeof sourcePosition !== 'object') {
+            autoActivate = sourcePosition;
+            sourcePosition = getMid(source);
+        }
+        dragging.init(event, 'connect', {
+            autoActivate: autoActivate,
+            data: {
+                shape: source,
+                context: {
+                    source: source,
+                    sourcePosition: sourcePosition,
+                    type: type,
+                    elementFactory: elementFactory
                 }
             }
         });

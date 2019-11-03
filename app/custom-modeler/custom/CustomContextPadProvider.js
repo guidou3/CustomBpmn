@@ -14,16 +14,73 @@ import {
 } from 'min-dash';
 import {isLabel} from "./utils/LabelUtil";
 
-import {resourceLabel} from "./Types";
+import {resourceArcElements} from "./Types";
 
 
-export default function CustomContextPadProvider(injector, connect, translate) {
+export default function CustomContextPadProvider(config, injector, elementFactory, connect, create, translate) {
 
-  injector.invoke(ContextPadProvider, this);
+    injector.invoke(ContextPadProvider, this);
 
-  var cached = bind(this.getContextPadEntries, this);
+    var cached = bind(this.getContextPadEntries, this);
 
-  this.getContextPadEntries = function(element) {
+    let autoPlace = config.autoPlace
+    if (autoPlace !== false) {
+        autoPlace = injector.get('autoPlace', false);
+    }
+
+    function appendAction(type, className, title, options) {
+        if (typeof title !== 'string') {
+            options = title;
+            title = translate('Append {type}', { type: type.replace(/^bpmn:/, '') });
+        }
+
+        function appendStart(event, element) {
+            var shape = elementFactory.createShape(assign({ type: type }, options));
+            create.start(event, shape, {
+                source: element
+            });
+        }
+
+        function append(event, element) {
+            var shape = elementFactory.createShape(assign({ type: type }, options));
+
+            autoPlace.append(element, shape);
+        }
+
+
+        return {
+            group: 'model',
+            className: className,
+            title: title,
+            action: {
+                dragstart: appendStart,
+                click: autoPlace ? append : appendStart
+            }
+        };
+    }
+
+    function appendConnectAction(type, className, title) {
+        if (typeof title !== 'string') {
+            title = translate('Append {type}', { type: type.replace(/^custom:/, '') });
+        }
+
+        function connectStart(event, element, autoActivate) {
+            connect.customStart(event, element, type, elementFactory, autoActivate);
+        }
+
+
+        return {
+            group: 'connect',
+            className: className,
+            title: title,
+            action: {
+                dragstart: connectStart,
+                click: connectStart
+            }
+        };
+    }
+
+    this.getContextPadEntries = function(element) {
     var actions = cached(element);
     var businessObject = element.businessObject;
 
@@ -36,34 +93,43 @@ export default function CustomContextPadProvider(injector, connect, translate) {
     }
 
     function startConnectConsequenceTimed(event, element, autoActivate) {
-      connect.customStart(event, element, 'custom:ConsequenceTimedFlow', autoActivate);
+      connect.customStart2(event, element, 'custom:ConsequenceTimedFlow', elementFactory, autoActivate);
     }
 
-    if (isAny(businessObject, resourceLabel) && element.type !== 'label') {
-          assign(actions, {
-              'connect': {
-                  group: 'connect',
-                  className: 'bpmn-icon-connection-multi',
-                  title: translate('Connect using custom connection'),
-                  action: {
-                      click: startConnect,
-                      dragstart: startConnect
-                  }
-              }
-          });
+    function startConnectTimeDistance(event, element, autoActivate) {
+        connect.customStart2(event, element, 'custom:ConsequenceTimedFlow', elementFactory, autoActivate);
+    }
 
-      }
+    if (isAny(businessObject, resourceArcElements) && element.type !== 'label') {
+        assign(actions, {
+          'connect': {
+              group: 'connect',
+              className: 'bpmn-icon-connection-multi',
+              title: translate('Connect using custom connection'),
+              action: {
+                  click: startConnect,
+                  dragstart: startConnect
+              }
+          }
+        });
+    }
     if(is(businessObject, 'bpmn:BaseElement') && element.type !== 'label') {
         assign(actions, {
-            'connect1': {
-                group: 'connect',
-                className: 'bpmn-icon-connection-multi',
-                title: translate('Connect using custom connection'),
-                action: {
-                    click: startConnectConsequence,
-                    dragstart: startConnectConsequence
-                }
-            }
+            'connect1': appendConnectAction(
+                'custom:ConsequenceFlow',
+                'bpmn-icon-connection-multi',
+                'Connect using custom connection'
+            ),
+            'connect2': appendConnectAction(
+                'custom:ConsequenceTimedFlow',
+                'bpmn-icon-connection-multi',
+                'Connect using custom connection'
+            ),
+            'connect3': appendConnectAction(
+                'custom:TimeDistance',
+                'bpmn-icon-connection-multi',
+                'Connect using custom connection'
+            ),
         });
     }
 
@@ -74,7 +140,10 @@ export default function CustomContextPadProvider(injector, connect, translate) {
 inherits(CustomContextPadProvider, ContextPadProvider);
 
 CustomContextPadProvider.$inject = [
-  'injector',
-  'connect',
-  'translate'
+    'config',
+    'injector',
+    'elementFactory',
+    'connect',
+    'create',
+    'translate'
 ];

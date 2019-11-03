@@ -203,6 +203,8 @@ CustomLabelEditingProvider.prototype.getEditingBBox = function(element) {
     var target = element.label || element;
 
     var bbox = canvas.getAbsoluteBBox(target);
+    console.log(element)
+    console.log(bbox)
     var mid = {
         x: bbox.x + bbox.width / 2,
         y: bbox.y + bbox.height / 2
@@ -251,7 +253,7 @@ CustomLabelEditingProvider.prototype.getEditingBBox = function(element) {
 
     // internal labels for tasks and collapsed call activities,
     // sub processes and participants
-    if (isAny(element, [ 'bpmn:Task', 'bpmn:CallActivity']) ||
+    if (isAny(element, [ 'bpmn:Task', 'bpmn:CallActivity', 'custom:TimeSlot']) ||
         isCollapsedPool(element) ||
         isCollapsedSubProcess(element)) {
 

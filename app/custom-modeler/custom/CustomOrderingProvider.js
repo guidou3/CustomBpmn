@@ -1,7 +1,7 @@
 import inherits from 'inherits';
 import { isAny } from 'bpmn-js/lib/features/modeling/util/ModelingUtil';
 
-import {connections} from "./Types";
+import {connections, isCustomConnection} from "./Types";
 
 import OrderingProvider from 'diagram-js/lib/features/ordering/OrderingProvider';
 
@@ -24,7 +24,7 @@ export default function CustomOrderingProvider(eventBus, canvas) {
       };
     }
 
-    if (isAny(element, connections)) {
+    else if (isCustomConnection(element.type)) {
 
       // always move to end of root element
       // to display always on top

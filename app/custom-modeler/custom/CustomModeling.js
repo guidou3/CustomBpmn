@@ -36,6 +36,14 @@ export default class CustomModeling extends Modeling {
         });
     }
 
+    createShape(shape, position, target, parentIndex, hints) {
+        console.log("cs cm")
+        //se shape !== custom chiama super, altrimenti...
+        let val = super.createShape(shape, position, target, parentIndex, hints)
+        console.log(val)
+        return val
+    }
+
     // createConnection(source, target, parentIndex, connection, parent, hints) {
     //
     //     if (typeof parentIndex === 'object') {

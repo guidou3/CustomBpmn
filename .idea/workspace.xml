@@ -1,7 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d828e062-e667-4f47-8ea4-4ccbac7e9156" name="Default Changelist" comment="" />
+    <list default="true" id="d828e062-e667-4f47-8ea4-4ccbac7e9156" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/app/custom-modeler/custom/behaviour/ReplaceConnectionBehaviour.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-elements.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-elements.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/CustomConnect.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/CustomConnect.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/CustomContextPadProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/CustomContextPadProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/CustomElementFactory.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/CustomElementFactory.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/CustomLabelEdingProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/CustomLabelEdingProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/CustomModeling.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/CustomModeling.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/CustomOrderingProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/CustomOrderingProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/CustomPalette.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/CustomPalette.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/CustomRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/CustomRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/CustomRules.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/CustomRules.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/CustomUpdater.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/CustomUpdater.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/Types.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/Types.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/index.html" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,13 +34,13 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1SWLA5WQL0vaw0oM9IGezyDCw4F" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../prova/bpmn-js-example-custom-shapes - Copia" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -32,7 +50,7 @@
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="configurable.group.tools" />
+    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
     <property name="ts.external.directory.path" value="C:\Program Files\JetBrains\WebStorm 2018.2.2\plugins\JavaScriptLanguage\jsLanguageServicesImpl\external" />
   </component>
   <component name="RunDashboard">
@@ -81,6 +99,12 @@
       <workItem from="1572341350027" duration="9931000" />
       <workItem from="1572424675713" duration="9000" />
       <workItem from="1572427223392" duration="3063000" />
+      <workItem from="1572446975769" duration="10949000" />
+      <workItem from="1572513242905" duration="17675000" />
+      <workItem from="1572600835401" duration="20965000" />
+      <workItem from="1572690080444" duration="22924000" />
+      <workItem from="1572775360503" duration="3021000" />
+      <workItem from="1572790315578" duration="5378000" />
     </task>
     <servers />
   </component>

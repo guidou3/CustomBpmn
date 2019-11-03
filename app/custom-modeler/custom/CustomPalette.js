@@ -132,26 +132,17 @@ PaletteProvider.prototype.getPaletteEntries = function(element) {
     'custom-resource-absence': createAction(
         'custom:ResourceAbsence', 'custom', 'icon-custom-resource-absence'
     ),
-    'custom-resource-instance': createAction(
-        'custom:ResourceInstance', 'custom', 'icon-custom-resource-instance'
-    ),
     'custom-role': createAction(
         'custom:Role', 'custom', 'icon-custom-role'
     ),
     'custom-role-absence': createAction(
         'custom:RoleAbsence', 'custom', 'icon-custom-role-absence'
     ),
-    'custom-role-instance': createAction(
-        'custom:RoleInstance', 'custom', 'icon-custom-role-instance'
-    ),
     'custom-group': createAction(
         'custom:Group', 'custom', 'icon-custom-group'
     ),
     'custom-group-absence': createAction(
         'custom:GroupAbsence', 'custom', 'icon-custom-group-absence'
-    ),
-    'custom-group-instance': createAction(
-        'custom:GroupInstance', 'custom', 'icon-custom-group-instance'
     ),
   });
 
