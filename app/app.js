@@ -77,7 +77,7 @@ function saveSVG(done) {
 function saveDiagram(done) {
 
   modeler.saveXML({ format: true }, function(err, xml) {
-    done(err, xml);
+    done(err, xml, modeler.getCustomElements());
     console.log(modeler.getCustomElements())
   });
 }
@@ -157,12 +157,37 @@ $(function() {
 
   function setEncoded(link, name, data) {
     var encodedData = encodeURIComponent(data);
-
+    console.log("ok?")
     if (data) {
       link.addClass('active').attr({
         'href': 'data:application/bpmn20-xml;charset=UTF-8,' + encodedData,
         'download': name
       });
+    } else {
+      link.removeClass('active');
+    }
+  }
+
+  function setMultipleEncoded(link, name, data) {
+
+
+    if (data) {
+      let urls = []
+      window.localStorage.setItem("diagram", encodeURIComponent(data[0]))
+      window.localStorage.setItem("custom", encodeURIComponent(JSON.stringify(data[1])))
+      // link.addClass('active').on("click", `downloadMultiple([${urls[0]},${urls[1]}])`)
+      // link.addClass('active').attr({
+      //   'onClick': `downloadMultiple([${encodeURIComponent(urls[0])},${encodeURIComponent(urls[1])}])`,
+      //   'href': '#'
+      // });
+      // link.addClass('active').attr({
+      //   // 'onClick': `window.open('${'data:application/bpmn20-xml;charset=UTF-8,' + encodeURIComponent(data[1])}');`,
+      //   // 'onClick': `download(${encodeURIComponent(data[1])}, 'custom.elements')`,
+      //   'onClick': `download()`,
+      //   'href': '#'
+      //   // 'href': 'data:application/bpmn20-xml;charset=UTF-8,' + encodeURIComponent(data[0]),
+      //   // 'download': name
+      // });
     } else {
       link.removeClass('active');
     }
@@ -174,15 +199,20 @@ $(function() {
       setEncoded(downloadSvgLink, 'diagram.svg', err ? null : svg);
     });
 
-    saveDiagram(function(err, xml) {
-      setEncoded(downloadLink, 'diagram.bpmn', err ? null : xml);
+    saveDiagram(function(err, xml, json) {
+      // setEncoded(downloadLink, 'custom.elements', err ? null : json)
+      // setEncoded(downloadLink, 'diagram.bpmn', err ? null : xml)
+      // console.log("what?")
+      setMultipleEncoded(downloadLink, 'diagram.bpmn', err ? null : [xml, json])
     });
   }, 500);
 
   modeler.on('commandStack.changed', exportArtifacts);
 });
 
-
+function getData() {
+  console.log("getData")
+}
 
 // helpers //////////////////////
 

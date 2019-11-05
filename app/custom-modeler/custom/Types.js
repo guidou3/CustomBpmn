@@ -21,7 +21,9 @@ export const externalLabel = [
 
 export const connections = [
     'custom:ResourceArc',
-    'custom:ConsequenceFlow'
+    'custom:ConsequenceFlow',
+    'custom:TimeDistanceArcStart',
+    'custom:TimeDistanceArcEnd',
 ]
 
 export const directEdit = [
@@ -53,7 +55,8 @@ export const custom = [
     'custom:TimeSlot',
     'custom:ResourceArc',
     'custom:ConsequenceFlow',
-    'custom:TimeDistanceArcStart'
+    'custom:TimeDistanceArcStart',
+    'custom:TimeDistanceArcEnd',
 ]
 
 export function isCustomShape(type) {
