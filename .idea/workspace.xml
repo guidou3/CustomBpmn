@@ -4,8 +4,7 @@
     <list default="true" id="d828e062-e667-4f47-8ea4-4ccbac7e9156" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/custom-elements.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-elements.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/custom-modeler/custom/Types.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/custom/Types.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/custom-modeler/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/custom-modeler/index.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/index.html" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -94,7 +93,13 @@
       <workItem from="1572775360503" duration="3021000" />
       <workItem from="1572790315578" duration="8783000" />
       <workItem from="1572877387683" duration="4220000" />
-      <workItem from="1572942563371" duration="3119000" />
+      <workItem from="1572942563371" duration="4982000" />
+      <workItem from="1573048740268" duration="5964000" />
+      <workItem from="1573114919519" duration="15000" />
+      <workItem from="1573119813592" duration="1246000" />
+      <workItem from="1573229259636" duration="1618000" />
+      <workItem from="1573383543996" duration="7659000" />
+      <workItem from="1573552291079" duration="8754000" />
     </task>
     <servers />
   </component>

@@ -2,7 +2,7 @@ import Modeler from 'bpmn-js/lib/Modeler';
 
 import {
   assign,
-  isArray
+  isArray, isObject
 } from 'min-dash';
 
 import inherits from 'inherits';
@@ -82,18 +82,23 @@ CustomModeler.prototype._addCustomConnection = function(customElement) {
  */
 CustomModeler.prototype.addCustomElements = function(customElements) {
 
-  if (!isArray(customElements)) {
-    throw new Error('argument must be an array');
+  if (!isObject(customElements)) {
+    console.log(customElements)
+    throw new Error('argument must be an object');
   }
+  if(!isArray(customElements.shapes) || !isArray(customElements.connections))
+    throw new Error('missing shapes or connections');
 
-  var shapes = [],
+  var shapes = customElements.shapes,
       connections = [];
 
-  customElements.forEach(function(customElement) {
-    if (isCustomConnection(customElement)) {
+  customElements.connections.forEach(function(customElement) {
+    if(customElement.type === 'custom:ConsequenceTimedFlow' || customElement.type === 'custom:TimeDistance') {
+      shapes.push(customElement.timeSlot)
+      connections = connections.concat(customElement.connections)
+    }
+    else {
       connections.push(customElement);
-    } else {
-      shapes.push(customElement);
     }
   });
 
@@ -161,6 +166,105 @@ CustomModeler.prototype.clear = function() {
   this._customElements = [];
   Modeler.prototype.clear.call(this)
 };
+
+CustomModeler.prototype.getJson = function () {
+  // dividere shape e connections
+  // individuare le connessioni che partono/arrivano dallo stesso oggetto custom
+  let [shapes, connections, timeSlots, timeConnections] = this._customElements.reduce(([shapes, connections, timeSlots, timeConnections], obj) => {
+    if(isCustomConnection(obj)) {
+      if(obj.source.includes("TimeSlot") || obj.target.includes("TimeSlot"))
+        return [shapes, connections, timeSlots, [...timeConnections, obj]]
+      else
+        return [shapes, [...connections, obj], timeSlots, timeConnections]
+    }
+    else {
+      if(obj.type === "custom:TimeSlot")
+        return [shapes, connections, [...timeSlots, obj], timeConnections]
+      else
+        return [[...shapes, obj], connections, timeSlots, timeConnections]
+    }
+  }, [[], [], [], []])
+
+  let elements = timeSlots.reduce((res, obj) => {
+    res[obj.id] = {
+      occurrences: 0,
+      timeSlot: obj,
+      connections: []
+    }
+    return res
+  }, {})
+
+  for(let i=0; i<timeConnections.length; i++) {
+    let id = timeConnections[i].source.includes("TimeSlot") ? timeConnections[i].source : timeConnections[i].target
+    elements[id].occurrences += 1
+    elements[id].connections.push(timeConnections[i])
+  }
+
+  Object.values(elements).forEach((obj) => {
+    if(obj.occurrences === 0) {
+      // window.alert("TimeSlot without connections")
+    }
+    else if(obj.occurrences === 1) {
+      if(obj.connections[0].type === 'custom:ResourceArc') {
+        shapes.push(obj.timeSlot)
+        connections.push(obj.connections[0])
+      }
+      else {
+        // window.alert("TimeSlot with wrong connection")
+      }
+    }
+    else if(obj.occurrences > 2) {
+      // window.alert("TimeSlot with too many connections")
+    }
+    else {
+      if((obj.connections[0].type === 'custom:ResourceArc' && obj.connections[1].type === 'custom:ConsequenceFlow'))
+        connections.push({
+          type: 'custom:ConsequenceTimedFlow',
+          source: obj.connections[0].source,
+          target: obj.connections[1].target,
+          time: obj.timeSlot.text,
+          timeSlot: obj.timeSlot,
+          connections: obj.connections
+        })
+      else if(obj.connections[1].type === 'custom:ResourceArc' && obj.connections[0].type === 'custom:ConsequenceFlow')
+        connections.push({
+          type: 'custom:ConsequenceTimedFlow',
+          source: obj.connections[1].source,
+          target: obj.connections[0].target,
+          time: obj.timeSlot.text,
+          timeSlot: obj.timeSlot,
+          connections: obj.connections
+        })
+      else if((obj.connections[0].type === 'custom:TimeDistanceArcStart' && obj.connections[1].type === 'custom:TimeDistanceArcEnd'))
+        connections.push({
+          type: 'custom:TimeDistance',
+          source: obj.connections[0].source,
+          target: obj.connections[1].target,
+          time: obj.timeSlot.text,
+          timeSlot: obj.timeSlot,
+          connections: obj.connections
+        })
+      else if(obj.connections[1].type === 'custom:TimeDistanceArcStart' && obj.connections[0].type === 'custom:TimeDistanceArcEnd')
+        connections.push({
+          type: 'custom:TimeDistance',
+          source: obj.connections[1].source,
+          target: obj.connections[0].target,
+          time: obj.timeSlot.text,
+          timeSlot: obj.timeSlot,
+          connections: obj.connections
+        })
+    }
+  })
+  
+  // resArc + timeslot = TimeCostraint
+  // resArc + ts + cflow = ConsequenceTimedFlow
+  // TimeDisStartArc + ts + tdea = TimeDistance
+  //
+  return {
+    shapes: shapes,
+    connections: connections
+  }
+}
 
 
 function isCustomConnection(element) {

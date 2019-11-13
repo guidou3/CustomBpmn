@@ -20,7 +20,7 @@ var modeler = new CustomModeler({
 
 function createNewDiagram(bool) {
   if(bool)
-    openDiagram(pizzaDiagram);
+    openDiagram(pizzaDiagram, customElements);
   else {
     modeler.clear()
     modeler.createDiagram(function(err) {
@@ -46,7 +46,7 @@ function createNewDiagram(bool) {
 }
 
 
-function openDiagram(xml) {
+function openDiagram(xml, json) {
 
   modeler.importXML(xml, function(err) {
 
@@ -62,7 +62,7 @@ function openDiagram(xml) {
         container
           .removeClass('with-error')
           .addClass('with-diagram');
-        modeler.addCustomElements(customElements);
+        modeler.addCustomElements(json);
         body.addClass('shown')
     }
 
@@ -78,8 +78,48 @@ function saveDiagram(done) {
 
   modeler.saveXML({ format: true }, function(err, xml) {
     done(err, xml, modeler.getCustomElements());
-    console.log(modeler.getCustomElements())
+    // console.log(modeler.getJson())
   });
+}
+
+function handleFiles(files, callback) {
+  var bpmn, jsonFile;
+  if(files[0].name.includes(".bpmn")) {
+    bpmn = files[0]
+    if(files[1] && files[1].name.includes(".json"))
+      jsonFile = files[1]
+    else if(files[1] )
+      window.alert("second file is not a json file")
+  }
+  else if(files[1].name.includes(".bpmn")) {
+    bpmn = files[1]
+    if(files[0] && files[0].name.includes(".json"))
+      jsonFile = files[0]
+    else if(files[0] )
+      window.alert("second file is not a json file")
+  }
+  else {
+    window.alert("missing bpmn file")
+  }
+  var reader = new FileReader();
+
+  reader.onload = function(e) {
+    var xml = e.target.result;
+    let reader1 = new FileReader();
+
+    if(jsonFile) {
+      reader1.onload = function(e) {
+        let json = JSON.parse(e.target.result);
+        callback(xml, json);
+      };
+
+      reader1.readAsText(jsonFile);
+    }
+    else
+      callback(xml, null);
+  };
+
+  reader.readAsText(bpmn);
 }
 
 function registerFileDrop(container, callback) {
@@ -89,19 +129,8 @@ function registerFileDrop(container, callback) {
     e.preventDefault();
 
     var files = e.dataTransfer.files;
-
-    var file = files[0];
-
-    var reader = new FileReader();
-
-    reader.onload = function(e) {
-
-      var xml = e.target.result;
-
-      callback(xml);
-    };
-
-    reader.readAsText(file);
+    console.log(files)
+    handleFiles(files, callback)
   }
 
   function handleDragOver(e) {
@@ -145,6 +174,20 @@ $(function() {
     createNewDiagram(false);
   });
 
+  $('#js-open-diagram').click(function(e) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    let input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    input.click()
+    input.addEventListener('input', function (evt) {
+      console.log(evt.target.files)
+      handleFiles(evt.target.files, openDiagram)
+    })
+  });
+
   var downloadLink = $('#js-download-diagram');
   var downloadSvgLink = $('#js-download-svg');
 
@@ -157,7 +200,6 @@ $(function() {
 
   function setEncoded(link, name, data) {
     var encodedData = encodeURIComponent(data);
-    console.log("ok?")
     if (data) {
       link.addClass('active').attr({
         'href': 'data:application/bpmn20-xml;charset=UTF-8,' + encodedData,
@@ -175,19 +217,6 @@ $(function() {
       let urls = []
       window.localStorage.setItem("diagram", encodeURIComponent(data[0]))
       window.localStorage.setItem("custom", encodeURIComponent(JSON.stringify(data[1])))
-      // link.addClass('active').on("click", `downloadMultiple([${urls[0]},${urls[1]}])`)
-      // link.addClass('active').attr({
-      //   'onClick': `downloadMultiple([${encodeURIComponent(urls[0])},${encodeURIComponent(urls[1])}])`,
-      //   'href': '#'
-      // });
-      // link.addClass('active').attr({
-      //   // 'onClick': `window.open('${'data:application/bpmn20-xml;charset=UTF-8,' + encodeURIComponent(data[1])}');`,
-      //   // 'onClick': `download(${encodeURIComponent(data[1])}, 'custom.elements')`,
-      //   'onClick': `download()`,
-      //   'href': '#'
-      //   // 'href': 'data:application/bpmn20-xml;charset=UTF-8,' + encodeURIComponent(data[0]),
-      //   // 'download': name
-      // });
     } else {
       link.removeClass('active');
     }
@@ -199,20 +228,17 @@ $(function() {
       setEncoded(downloadSvgLink, 'diagram.svg', err ? null : svg);
     });
 
-    saveDiagram(function(err, xml, json) {
+    saveDiagram(function(err, xml) {
       // setEncoded(downloadLink, 'custom.elements', err ? null : json)
       // setEncoded(downloadLink, 'diagram.bpmn', err ? null : xml)
       // console.log("what?")
+      let json = modeler.getJson()
       setMultipleEncoded(downloadLink, 'diagram.bpmn', err ? null : [xml, json])
     });
   }, 500);
 
   modeler.on('commandStack.changed', exportArtifacts);
 });
-
-function getData() {
-  console.log("getData")
-}
 
 // helpers //////////////////////
 
