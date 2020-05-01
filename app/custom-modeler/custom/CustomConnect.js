@@ -11,7 +11,6 @@ export default function CustomConnect(eventBus, dragging, modeling, rules) {
     // rules
 
     function canConnect(source, target, type) {
-        console.log("called cr")
         return rules.allowed('connection.create', {
             source: source,
             target: target,
@@ -70,13 +69,11 @@ export default function CustomConnect(eventBus, dragging, modeling, rules) {
         if (typeof canExecute === 'object') {
             if(canExecute.type1) {
                 // crea shape
-                console.log("here")
                 let shape = elementFactory.createShape({ type: 'custom:TimeSlot' });
                 let pos = {
                     x: (sourcePosition.x + targetPosition.x)/2,
                     y: (sourcePosition.y + targetPosition.y)/2,
                 }
-                console.log(pos)
                 let newShape = modeling.appendShape(source, shape, pos, source.parent, {
                     connection: { type: canExecute.type1}
                 });
@@ -108,12 +105,10 @@ export default function CustomConnect(eventBus, dragging, modeling, rules) {
      * @param {Boolean} [autoActivate=false]
      */
     this.start = function(event, source, sourcePosition, autoActivate) {
-        console.log("called this one")
         if (typeof sourcePosition !== 'object') {
             autoActivate = sourcePosition;
             sourcePosition = getMid(source);
         }
-        console.log(autoActivate)
 
         dragging.init(event, 'connect', {
             autoActivate: autoActivate,

@@ -7,7 +7,7 @@ import {
 
 import inherits from 'inherits';
 
-import {connections} from "./custom/Types";
+import {isCustomConnection} from "./custom/Types";
 
 import CustomModule from './custom';
 import {isLabelExternal, getExternalLabelBounds} from "./custom/utils/LabelUtil";
@@ -81,25 +81,28 @@ CustomModeler.prototype._addCustomConnection = function(customElement) {
  * @param {Array<Object>} customElements
  */
 CustomModeler.prototype.addCustomElements = function(customElements) {
-
-  if (!isObject(customElements)) {
-    console.log(customElements)
+  if (!isObject(customElements))
     throw new Error('argument must be an object');
-  }
-  if(!isArray(customElements.shapes) || !isArray(customElements.connections))
-    throw new Error('missing shapes or connections');
 
-  var shapes = customElements.shapes,
+  if(!isArray(customElements.diagram) )
+    throw new Error('missing diagram');
+
+  var shapes = [],
       connections = [];
 
-  customElements.connections.forEach(function(customElement) {
-    if(customElement.type === 'custom:ConsequenceTimedFlow' || customElement.type === 'custom:TimeDistance') {
-      shapes.push(customElement.timeSlot)
-      connections = connections.concat(customElement.connections)
-    }
-    else {
+  customElements.diagram.forEach(function(customElement) {
+    if (isCustomConnection(customElement)) {
       connections.push(customElement);
+    } else {
+      shapes.push(customElement);
     }
+    // if(customElement.type === 'custom:ConsequenceTimedFlow' || customElement.type === 'custom:TimeDistance') {
+    //   shapes.push(customElement.timeSlot)
+    //   connections = connections.concat(customElement.connections)
+    // }
+    // else {
+    //   connections.push(customElement);
+    // }
   });
 
   // add shapes before connections so that connections
@@ -167,25 +170,208 @@ CustomModeler.prototype.clear = function() {
   Modeler.prototype.clear.call(this)
 };
 
+function parseTime2(time) {
+  let array = time.split(",").map((line) => {
+    line = line.trim()
+    let ineq = line.substring(0, line.search(/[ |\d]/))
+  })
+
+}
+
+function parseTime(text, bool) {
+  if(text == null)
+    return null
+  let pos = text.search(/[ \d]/);
+  if(pos === -1)
+    console.error("Time is in an invalid form.")
+
+  let timeString = text.substring(pos).trim();
+  let pos2 = timeString.search(/[ \D]/);
+  let reg ="(<|<=|>|>=|==|!=)[ ]*([0-9]+)[ ]*(.*)";
+  if(bool)
+    reg = "(Start|End)(-(Start|End))*[ ]*" + reg
+  let obj = text.match(new RegExp(reg))
+  return {
+    sourceSide: obj[1],
+    targetSide: obj[3],
+    ineq: obj[4],
+    time: obj[5],
+    timeUnit: obj[6],
+  }
+}
+
+function createConsequence(item) {
+  return {
+    id: item.id,
+    type: 'Consequence',
+    sourceSide: 'End',
+    targetSide: 'Start',
+    source: item.source,
+    target: item.target
+  }
+}
+
+function createConsequenceTimed(item, timeString) {
+  let obj = parseTime(timeString, true)
+  if(obj == null) return null
+  return Object.assign(createConsequence(item), {
+    timeData: {
+      time: obj.time,
+      timeUnit: obj.timeUnit,
+    },
+    ineq: obj.ineq,
+    sourceSide: obj.sourceSide,
+    targetSide: obj.targetSide
+  })
+}
+
+function createTimeDistance(item, timeString) {
+  let obj = parseTime(timeString, true)
+  if(obj == null) return null
+  return {
+    id: item.id,
+    type: 'TimeDistance',
+    side: obj.sourceSide,
+    source: item.source,
+    target: item.target,
+    timeData: {
+      time: obj.time,
+      timeUnit: obj.timeUnit,
+    },
+    ineq: obj.ineq
+  }
+}
+
+function createTaskDuration(item, timeString) {
+  let obj = parseTime(timeString, false)
+  if(obj == null) return null
+  return {
+    id: item.id,
+    type: 'TaskDuration',
+    task: item.connections[0].source.includes('TimeSlot') ? item.connections[0].target : item.connections[0].source,
+    timeData: {
+      time: obj.time,
+      timeUnit: obj.timeUnit,
+    },
+    ineq: obj.ineq
+  }
+}
+
+function getResType(item) {
+  if(item.type.includes("Absence"))
+    return "Absence"
+  else {
+    if(item.text)
+      return "Instance"
+    else
+      return "Occurrence"
+  }
+}
+
+function createRRG(item, type) {
+  return {
+    id: item.id,
+    type: type,
+    name: item.text,
+    transitions: [],
+    resType: getResType(item)
+  }
+}
+
+function createTimeInstance(item) {
+  console.log(item.text)
+  let obj = item.text.match(new RegExp("(Before|After)[ ]*(Start|End)?[ ]*(.*)"))
+  console.log(obj)
+
+  return {
+    id: item.id,
+    type: "TimeInstance",
+    task: null,
+    side: obj[1] === "Before" ? 'Start' : 'End',
+    transitionSide: obj[2] || 'End', //TODO: implementare la posizione di partenza / fine
+    timestamp: obj[3]
+  }
+}
+
+function changeListRRG(list, source, target) {
+  for(let i=0; i < list.length; i++) {
+    if(list[i].id === source)
+      list[i].transitions.push(target)
+  }
+  return list;
+}
+
+function insertResourceArcData(obj, connection) {
+  let source, target;
+  if(!connection.source.includes('Task')) {
+    source = connection.source;
+    target = connection.target;
+  }
+  else {
+    source = connection.target;
+    target = connection.source;
+  }
+
+  if(source.includes('Resource'))
+    obj.resources = changeListRRG(obj.resources, source, target)
+  else if(source.includes('Role'))
+    obj.roles = changeListRRG(obj.roles, source, target)
+  else if(source.includes('Group'))
+    obj.groups = changeListRRG(obj.groups, source, target)
+  else if(source.includes('Clock')) {
+    for(let i=0; i < obj.timeInstances.length; i++)
+      if(obj.timeInstances[i].id === source) {
+        if(obj.timeInstances[i].task)
+          console.error("Multiple arcs to a clock. Not implemented.")
+        else
+          obj.timeInstances[i].task = target
+      }
+  }
+
+  return obj;
+}
+
 CustomModeler.prototype.getJson = function () {
   // dividere shape e connections
   // individuare le connessioni che partono/arrivano dallo stesso oggetto custom
-  let [shapes, connections, timeSlots, timeConnections] = this._customElements.reduce(([shapes, connections, timeSlots, timeConnections], obj) => {
-    if(isCustomConnection(obj)) {
-      if(obj.source.includes("TimeSlot") || obj.target.includes("TimeSlot"))
-        return [shapes, connections, timeSlots, [...timeConnections, obj]]
-      else
-        return [shapes, [...connections, obj], timeSlots, timeConnections]
+  let obj = {
+    consequences: [],
+    consequencesTimed: [],
+    timeDistances: [],
+    timeInstances: [],
+    taskDurations: [],
+    resources: [],
+    roles: [],
+    groups: [],
+    timeSlots: [],
+    timeConnections: []
+  }
+  obj = this._customElements.reduce((res, item) => {
+
+    if(isCustomConnection(item)) {
+      if(item.source.includes("TimeSlot") || item.target.includes("TimeSlot"))
+        res.timeConnections.push(item)
+      else if(item.type === 'custom:ResourceArc')
+        res = insertResourceArcData(res, item)
+      else // consequences
+        res.consequences.push(createConsequence(item))
     }
     else {
-      if(obj.type === "custom:TimeSlot")
-        return [shapes, connections, [...timeSlots, obj], timeConnections]
-      else
-        return [[...shapes, obj], connections, timeSlots, timeConnections]
+      if(item.type === "custom:TimeSlot")
+        res.timeSlots.push(item)
+      else if(item.type.includes("custom:Resource"))
+        res.resources.push(createRRG(item, "Resource"))
+      else if(item.type.includes("custom:Role"))
+        res.roles.push(createRRG(item, "Role"))
+      else if(item.type.includes("custom:Group"))
+        res.groups.push(createRRG(item, "Group"))
+      else if(item.type === 'custom:Clock')
+        res.timeInstances.push(createTimeInstance(item))
     }
-  }, [[], [], [], []])
+    return res;
+  }, obj);
 
-  let elements = timeSlots.reduce((res, obj) => {
+  let elements = obj.timeSlots.reduce((res, obj) => {
     res[obj.id] = {
       occurrences: 0,
       timeSlot: obj,
@@ -194,79 +380,67 @@ CustomModeler.prototype.getJson = function () {
     return res
   }, {})
 
-  for(let i=0; i<timeConnections.length; i++) {
-    let id = timeConnections[i].source.includes("TimeSlot") ? timeConnections[i].source : timeConnections[i].target
+  for(let i=0; i<obj.timeConnections.length; i++) {
+    let id = obj.timeConnections[i].source.includes("TimeSlot") ? obj.timeConnections[i].source : obj.timeConnections[i].target
     elements[id].occurrences += 1
-    elements[id].connections.push(timeConnections[i])
+    elements[id].connections.push(obj.timeConnections[i])
   }
-
-  Object.values(elements).forEach((obj) => {
-    if(obj.occurrences === 0) {
+  let counter = 1;
+  Object.values(elements).forEach((item) => {
+    if(item.occurrences === 0) {
       // window.alert("TimeSlot without connections")
     }
-    else if(obj.occurrences === 1) {
-      if(obj.connections[0].type === 'custom:ResourceArc') {
-        shapes.push(obj.timeSlot)
-        connections.push(obj.connections[0])
+    else if(item.occurrences === 1) {
+      if(item.connections[0].type === 'custom:ResourceArc') {
+        obj.taskDurations.push(createTaskDuration(item, item.timeSlot.text))
       }
       else {
-        // window.alert("TimeSlot with wrong connection")
+        console.error("TimeSlot with wrong connection")
       }
     }
-    else if(obj.occurrences > 2) {
-      // window.alert("TimeSlot with too many connections")
+    else if(item.occurrences > 2) {
+      console.error("TimeSlot with too many connections")
     }
     else {
-      if((obj.connections[0].type === 'custom:ResourceArc' && obj.connections[1].type === 'custom:ConsequenceFlow'))
-        connections.push({
-          type: 'custom:ConsequenceTimedFlow',
-          source: obj.connections[0].source,
-          target: obj.connections[1].target,
-          time: obj.timeSlot.text,
-          timeSlot: obj.timeSlot,
-          connections: obj.connections
-        })
-      else if(obj.connections[1].type === 'custom:ResourceArc' && obj.connections[0].type === 'custom:ConsequenceFlow')
-        connections.push({
-          type: 'custom:ConsequenceTimedFlow',
-          source: obj.connections[1].source,
-          target: obj.connections[0].target,
-          time: obj.timeSlot.text,
-          timeSlot: obj.timeSlot,
-          connections: obj.connections
-        })
-      else if((obj.connections[0].type === 'custom:TimeDistanceArcStart' && obj.connections[1].type === 'custom:TimeDistanceArcEnd'))
-        connections.push({
-          type: 'custom:TimeDistance',
-          source: obj.connections[0].source,
-          target: obj.connections[1].target,
-          time: obj.timeSlot.text,
-          timeSlot: obj.timeSlot,
-          connections: obj.connections
-        })
-      else if(obj.connections[1].type === 'custom:TimeDistanceArcStart' && obj.connections[0].type === 'custom:TimeDistanceArcEnd')
-        connections.push({
-          type: 'custom:TimeDistance',
-          source: obj.connections[1].source,
-          target: obj.connections[0].target,
-          time: obj.timeSlot.text,
-          timeSlot: obj.timeSlot,
-          connections: obj.connections
-        })
+      if((item.connections[0].type === 'custom:ResourceArc' && item.connections[1].type === 'custom:ConsequenceFlow'))
+        obj.consequencesTimed.push(createConsequenceTimed({
+          id: 'ConsequenceTimedFlow_' + counter,
+          source: item.connections[0].source,
+          target: item.connections[1].target,
+        }, item.timeSlot.text))
+      else if(item.connections[1].type === 'custom:ResourceArc' && item.connections[0].type === 'custom:ConsequenceFlow')
+        obj.consequencesTimed.push(createConsequenceTimed({
+          id: 'ConsequenceTimedFlow_' + counter,
+          source: item.connections[1].source,
+          target: item.connections[0].target,
+        }, item.timeSlot.text))
+      else if((item.connections[0].type === 'custom:TimeDistanceArcStart' && item.connections[1].type === 'custom:TimeDistanceArcEnd'))
+        obj.timeDistances.push(createTimeDistance({
+          id: 'TimeDistance_'+counter,
+          source: item.connections[0].source,
+          target: item.connections[1].target,
+        }, item.timeSlot.text))
+      else if(item.connections[1].type === 'custom:TimeDistanceArcStart' && item.connections[0].type === 'custom:TimeDistanceArcEnd')
+        obj.timeDistances.push(createTimeDistance({
+          id: 'TimeDistance_'+counter,
+          source: item.connections[1].source,
+          target: item.connections[0].target,
+        }, item.timeSlot.text))
+      counter++;
     }
   })
+
+  delete obj.timeSlots;
+  delete obj.timeConnections
   
   // resArc + timeslot = TimeCostraint
   // resArc + ts + cflow = ConsequenceTimedFlow
   // TimeDisStartArc + ts + tdea = TimeDistance
   //
+  console.log(this._customElements)
+  console.log(obj)
   return {
-    shapes: shapes,
-    connections: connections
+    definitions: obj,
+    diagram: this._customElements
   }
-}
-
-
-function isCustomConnection(element) {
-  return connections.includes(element.type)
 }

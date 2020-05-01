@@ -79,11 +79,7 @@ function canConnect2(source, target, connection) {
   if (nonExistingOrLabel(source) || nonExistingOrLabel(target)) {
     return null;
   }
-  console.log("canConnect2")
   if(connection === 'custom:ConsequenceFlow') {
-    console.log("inside")
-    console.log(isDefaultValid(source))
-    console.log(isDefaultValid(target))
     if(isDefaultValid(source) && isDefaultValid(target))
       return { type: connection }
     else if(is(source, 'custom:TimeSlot') && isDefaultValid(target))
@@ -145,7 +141,6 @@ CustomRules.prototype.init = function() {
   }
 
   function canReconnect(source, target, connection) {
-    console.log("Called")
     if(!isCustom(connection) && !isCustom(source) && !isCustom(target))
       return;
     else {
@@ -165,10 +160,6 @@ CustomRules.prototype.init = function() {
       }
       // add time distance
       else {
-        console.log("should not")
-        console.log(connection.type)
-        console.log(isCustom(source))
-        console.log(isCustom(target))
         return canConnect(source, target, connection.type)
       }
     }
@@ -240,10 +231,6 @@ CustomRules.prototype.init = function() {
     var connection = context.connection,
         source = connection.source,
         target = context.hover || context.target;
-    console.log(connection.type)
-    console.log(source)
-    console.log(target)
-    console.log(canConnect2(source, target, connection.type))
     return canConnect2(source, target, connection.type);
   });
 
@@ -257,7 +244,6 @@ CustomRules.prototype.canConnect = function (source, target, connection) {
   if (nonExistingOrLabel(source) || nonExistingOrLabel(target)) {
     return null;
   }
-  console.log(canConnect2(source, target, connection.type))
   return canConnect2(source, target, connection.type)
 
 }

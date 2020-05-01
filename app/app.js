@@ -4,9 +4,13 @@ import BpmnModeler from 'bpmn-js/lib/Modeler';
 
 import pizzaDiagram from '../resources/diag.bpmn';
 
-import customElements from './custom-elements.json';
+import customElements from '../resources/customElements.json';
 
 import CustomModeler from './custom-modeler';
+
+import BpmnModdle from 'bpmn-moddle';
+
+var moddle = new BpmnModdle();
 
 var container = $('#js-drop-zone');
 let body =$('body')
@@ -32,7 +36,6 @@ function createNewDiagram(bool) {
 
         container.find('.error pre').text(err.message);
 
-        console.error(err);
       } else {
         container
             .removeClass('with-error')
@@ -59,11 +62,14 @@ function openDiagram(xml, json) {
 
       console.error(err);
     } else {
-        container
-          .removeClass('with-error')
-          .addClass('with-diagram');
+      console.log("here")
+      container
+        .removeClass('with-error')
+        .addClass('with-diagram');
+
+      if(json != null)
         modeler.addCustomElements(json);
-        body.addClass('shown')
+      body.addClass('shown')
     }
 
 
@@ -74,10 +80,62 @@ function saveSVG(done) {
   modeler.saveSVG(done);
 }
 
+function fixTaskData(task) {
+  if(task.dataInputAssociations || task.dataOutputAssociations) {
+    // Create ioSpecification
+    let ioSpecification = moddle.create('bpmn:InputOutputSpecification', {id: 'io_'+task.get('id')})
+    if(task.dataInputAssociations)
+      task.dataInputAssociations.forEach((obj) => {
+        let dataInput = moddle.create('bpmn:DataInput', {id:'input_'+ obj.get('id')})
+        ioSpecification.get('dataInputs').push(dataInput)
+        obj.set('targetRef', dataInput)
+        let name = obj.get('name')
+        if(!name)
+          obj.set('name', "")
+      })
+    if(task.dataOutputAssociations)
+      task.dataOutputAssociations.forEach((obj) => {
+        let dataOutput = moddle.create('bpmn:DataOutput', {id:'output_'+ obj.get('id')})
+        ioSpecification.get('dataOutputs').push(dataOutput)
+        obj.set('sourceRef', [dataOutput])
+        let name = obj.get('name')
+        if(!name)
+          obj.set('name', "")
+     })
+    task.set("ioSpecification", ioSpecification)
+
+    // Remove properties for data
+  }
+  let name = task.get('name')
+  if(!name)
+    task.set('name', "")
+  return task
+}
+
 function saveDiagram(done) {
 
   modeler.saveXML({ format: true }, function(err, xml) {
-    done(err, xml, modeler.getCustomElements());
+    moddle.fromXML(xml, (err, def) => {
+      def.get("rootElements").forEach((obj) => {
+        if(obj.$type.includes('Process')) {
+          obj.get('flowElements').forEach((el) => {
+            if(el.$type.includes('Task'))
+              fixTaskData(el)
+            else if(el.$type === 'bpmn:DataObjectReference') {
+              let name = el.get('name')
+              if(!name)
+                el.set('name', "")
+
+            }
+
+          })
+        }
+      })
+      moddle.toXML(def,{ format: true }, (err, res) => {
+        done(err, res, modeler.getCustomElements());
+      })
+    })
+
     // console.log(modeler.getJson())
   });
 }

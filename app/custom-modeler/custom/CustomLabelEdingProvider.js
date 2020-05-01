@@ -99,6 +99,7 @@ export default function CustomLabelEditingProvider(
             'bpmn:TextAnnotation',
             'bpmn:Group'
         ].concat(directEdit)
+        console.log(directEdit)
         if (force ||
             isAny(element, types) ||
             isCollapsedSubProcess(element)) {

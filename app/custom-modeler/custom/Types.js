@@ -30,7 +30,8 @@ export const directEdit = [
     // 'custom:Resource',
     // 'custom:Role',
     // 'custom:Group',
-    'custom:Clock'
+    'custom:Clock',
+    'custom:TimeSlot'
 ]
 
 export const resourceArcElements = [
