@@ -4,8 +4,6 @@ import BpmnModeler from 'bpmn-js/lib/Modeler';
 
 import pizzaDiagram from '../resources/diag.bpmn';
 
-import customElements from '../resources/customElements.json';
-
 import CustomModeler from './custom-modeler';
 
 import BpmnModdle from 'bpmn-moddle';
@@ -22,34 +20,30 @@ var modeler = new CustomModeler({
   }
 });
 
-function createNewDiagram(bool) {
-  if(bool)
-    openDiagram(pizzaDiagram, customElements);
-  else {
-    modeler.clear()
-    modeler.createDiagram(function(err) {
+function createNewDiagram() {
+	modeler.clear()
+	modeler.createDiagram(function(err) {
 
-      if (err) {
-        container
-            .removeClass('with-diagram')
-            .addClass('with-error');
+	if (err) {
+		container
+			.removeClass('with-diagram')
+			.addClass('with-error');
 
-        container.find('.error pre').text(err.message);
-
-      } else {
-        container
-            .removeClass('with-error')
-            .addClass('with-diagram');
-        body.addClass('shown')
-      }
+		container.find('.error pre').text(err.message);
+	} else {
+		container
+			.removeClass('with-error')
+			.addClass('with-diagram');
+		body.addClass('shown')
+	}
 
 
-    })
-  }
+})
+
 }
 
 
-function openDiagram(xml, json) {
+function openDiagram(xml, cbpmn) {
 
   modeler.importXML(xml, function(err) {
 
@@ -67,8 +61,8 @@ function openDiagram(xml, json) {
         .removeClass('with-error')
         .addClass('with-diagram');
 
-      if(json != null)
-        modeler.addCustomElements(json);
+      if(cbpmn != null)
+        modeler.addCustomElements(cbpmn);
       body.addClass('shown')
     }
 
@@ -141,20 +135,20 @@ function saveDiagram(done) {
 }
 
 function handleFiles(files, callback) {
-  var bpmn, jsonFile;
+  var bpmn, cbpmnFile;
   if(files[0].name.includes(".bpmn")) {
     bpmn = files[0]
-    if(files[1] && files[1].name.includes(".json"))
-      jsonFile = files[1]
+    if(files[1] && files[1].name.includes(".cbpmn"))
+      cbpmnFile = files[1]
     else if(files[1] )
-      window.alert("second file is not a json file")
+      window.alert("second file is not a cbpmn file")
   }
   else if(files[1].name.includes(".bpmn")) {
     bpmn = files[1]
-    if(files[0] && files[0].name.includes(".json"))
-      jsonFile = files[0]
+    if(files[0] && files[0].name.includes(".cbpmn"))
+      cbpmnFile = files[0]
     else if(files[0] )
-      window.alert("second file is not a json file")
+      window.alert("second file is not a cbpmn file")
   }
   else {
     window.alert("missing bpmn file")
@@ -165,13 +159,13 @@ function handleFiles(files, callback) {
     var xml = e.target.result;
     let reader1 = new FileReader();
 
-    if(jsonFile) {
+    if(cbpmnFile) {
       reader1.onload = function(e) {
-        let json = JSON.parse(e.target.result);
-        callback(xml, json);
+        let cbpmn = JSON.parse(e.target.result);
+        callback(xml, cbpmn);
       };
 
-      reader1.readAsText(jsonFile);
+      reader1.readAsText(cbpmnFile);
     }
     else
       callback(xml, null);
@@ -222,14 +216,7 @@ $(function() {
     e.stopPropagation();
     e.preventDefault();
 
-    createNewDiagram(true);
-  });
-
-  $('#js-create-diagram2').click(function(e) {
-    e.stopPropagation();
-    e.preventDefault();
-
-    createNewDiagram(false);
+    createNewDiagram();
   });
 
   $('#js-open-diagram').click(function(e) {
@@ -290,8 +277,8 @@ $(function() {
       // setEncoded(downloadLink, 'custom.elements', err ? null : json)
       // setEncoded(downloadLink, 'diagram.bpmn', err ? null : xml)
       // console.log("what?")
-      let json = modeler.getJson()
-      setMultipleEncoded(downloadLink, 'diagram.bpmn', err ? null : [xml, json])
+      let cbpmn = modeler.getJson()
+      setMultipleEncoded(downloadLink, 'diagram.bpmn', err ? null : [xml, cbpmn])
     });
   }, 500);
 

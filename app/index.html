@@ -81,7 +81,7 @@
     </li>
     <li class="vr" style="margin-left: 2px"></li>
     <li>
-      <button title="create new BPMN diagram" id="js-create-diagram2">
+      <button title="create new BPMN diagram" id="js-create-diagram">
         <i class="fas fa-plus-circle"></i>
       </button>
     </li>
@@ -126,11 +126,11 @@
       var link = document.createElement('a');
       link.style.display = 'none';
       document.body.appendChild(link);
-      link.setAttribute('download', "diagram");
+      link.setAttribute('download', "diagram.bpmn");
       link.setAttribute('href', 'data:application/bpmn20-xml;charset=UTF-8,' + window.localStorage.getItem("diagram"));
       link.click();
 
-      link.setAttribute('download', "customElements.json");
+      link.setAttribute('download', "customElements.cbpmn");
       link.setAttribute('href', 'data:text/json;charset=UTF-8,' + window.localStorage.getItem("custom"));
       link.click();
 
