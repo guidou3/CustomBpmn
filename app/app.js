@@ -29,44 +29,45 @@ function createNewDiagram() {
 			.removeClass('with-diagram')
 			.addClass('with-error');
 
+		modeler.setModelOpen(false)
 		container.find('.error pre').text(err.message);
 	} else {
 		container
 			.removeClass('with-error')
 			.addClass('with-diagram');
+
+		modeler.setModelOpen(true)
 		body.addClass('shown')
 	}
-
-
 })
 
 }
 
 
 function openDiagram(xml, cbpmn) {
-
+  modeler.clear()
   modeler.importXML(xml, function(err) {
-
     if (err) {
       container
         .removeClass('with-diagram')
         .addClass('with-error');
 
+      modeler.setModelOpen(false);
       container.find('.error pre').text(err.message);
 
       console.error(err);
-    } else {
-      console.log("here")
+    }
+    else {
       container
         .removeClass('with-error')
         .addClass('with-diagram');
 
       if(cbpmn != null)
         modeler.addCustomElements(cbpmn);
+
+      modeler.setModelOpen(true);
       body.addClass('shown')
     }
-
-
   });
 }
 
@@ -143,35 +144,49 @@ function handleFiles(files, callback) {
     else if(files[1] )
       window.alert("second file is not a cbpmn file")
   }
-  else if(files[1].name.includes(".bpmn")) {
+  else if(files[1] != null && files[1].name.includes(".bpmn")) {
     bpmn = files[1]
     if(files[0] && files[0].name.includes(".cbpmn"))
       cbpmnFile = files[0]
     else if(files[0] )
       window.alert("second file is not a cbpmn file")
   }
-  else {
-    window.alert("missing bpmn file")
-  }
+  else if(files[0].name.includes(".cbpmn"))
+    cbpmnFile = files[0]
+
   var reader = new FileReader();
 
-  reader.onload = function(e) {
-    var xml = e.target.result;
-    let reader1 = new FileReader();
 
-    if(cbpmnFile) {
-      reader1.onload = function(e) {
-        let cbpmn = JSON.parse(e.target.result);
-        callback(xml, cbpmn);
-      };
 
-      reader1.readAsText(cbpmnFile);
-    }
-    else
-      callback(xml, null);
-  };
+  if(bpmn != null) {
+    reader.onload = function(e) {
+      var xml = e.target.result;
+      let reader1 = new FileReader();
 
-  reader.readAsText(bpmn);
+      if(cbpmnFile) {
+        reader1.onload = function(e) {
+          let cbpmn = JSON.parse(e.target.result);
+          callback(xml, cbpmn);
+        };
+
+        reader1.readAsText(cbpmnFile);
+      }
+      else
+        callback(xml, null);
+    };
+
+    reader.readAsText(bpmn);
+  }
+  else if(cbpmnFile != null && modeler.isModelOpen()) {
+    reader.onload = function(e) {
+      var cbpmn = JSON.parse(e.target.result);
+
+      modeler.addCustomElements(cbpmn)
+    };
+
+    reader.readAsText(cbpmnFile);
+  }
+
 }
 
 function registerFileDrop(container, callback) {
@@ -181,7 +196,6 @@ function registerFileDrop(container, callback) {
     e.preventDefault();
 
     var files = e.dataTransfer.files;
-    console.log(files)
     handleFiles(files, callback)
   }
 
@@ -212,13 +226,6 @@ if (!window.FileList || !window.FileReader) {
 
 $(function() {
 
-  $('#js-create-diagram').click(function(e) {
-    e.stopPropagation();
-    e.preventDefault();
-
-    createNewDiagram();
-  });
-
   $('#js-open-diagram').click(function(e) {
     e.stopPropagation();
     e.preventDefault();
@@ -228,13 +235,39 @@ $(function() {
     input.multiple = true
     input.click()
     input.addEventListener('input', function (evt) {
-      console.log(evt.target.files)
       handleFiles(evt.target.files, openDiagram)
     })
   });
 
+  $('#js-create-diagram').click(function(e) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    createNewDiagram();
+  });
+
   var downloadLink = $('#js-download-diagram');
   var downloadSvgLink = $('#js-download-svg');
+
+  $('#js-add-colors').click(function(e) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    let input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = false
+    input.click()
+    input.addEventListener('input', function (evt) {
+
+      var reader = new FileReader();
+
+      reader.onload = function(e) {
+        modeler.setColors(JSON.parse(e.target.result))
+      };
+
+      reader.readAsText(evt.target.files[0]);
+    })
+  });
 
   $('.buttons a').click(function(e) {
     if (!$(this).is('.active')) {

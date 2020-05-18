@@ -315,9 +315,9 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     return path;
   }
 
-  function drawTimeSlot(width, height) {
+  function drawTimeSlot(width, height, color) {
     var attrs = computeStyle(attrs, {
-      stroke: '#000',
+      stroke: color,
       strokeWidth: 2,
       fill: '#fff'
     });
@@ -351,7 +351,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
 
   var renderers = this.renderers = {
     'custom:TimeSlot': (p, element) => {
-      let polygon = drawTimeSlot(element.width, element.height)
+      let polygon = drawTimeSlot(element.width, element.height, element.color)
 
       svgAppend(p, polygon);
       renderEmbeddedLabel(p, element, 'center-middle');
@@ -359,9 +359,9 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
       return polygon;
     },
     'custom:Clock': (p, element) => {
-
+      console.log(element)
       var attrs = computeStyle(attrs, {
-        stroke: '#000',
+        stroke: element.color,
         strokeWidth: 2,
         fill: '#fff'
       });
@@ -394,6 +394,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
       svgAttr(path, {
         width: element.width,
         height: element.height,
+        color: element.color,
         d: componentsToPath(d)
       });
 
@@ -877,6 +878,8 @@ CustomRenderer.prototype.canRender = function(element) {
 CustomRenderer.prototype.drawShape = function(p, element) {
   var type = element.type;
   var h = this.renderers[type];
+  if(element.color == null)
+    element.color= "#000"
 
   /* jshint -W040 */
   return h(p, element);

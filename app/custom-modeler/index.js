@@ -18,6 +18,9 @@ export default function CustomModeler(options) {
   Modeler.call(this, options);
 
   this._customElements = [];
+  this._idMap = []
+
+  this.modelOpen = false;
 }
 
 inherits(CustomModeler, Modeler);
@@ -47,10 +50,42 @@ CustomModeler.prototype._addCustomShape = function(customElement) {
   if (isLabelExternal(customElement) && getLabel(customShape)) {
     this.addLabel(customElement, customShape);
   }
-
   return canvas.addShape(customShape);
-
 };
+
+CustomModeler.prototype.setColors = function(idAndColorList) {
+  var modeling = this.get('modeling'),
+      elementRegistry = this.get('elementRegistry');
+
+
+  idAndColorList.forEach(obj => {
+    let element;
+    obj.ids.forEach(id => {
+      if(this._idMap[id])
+        element = this._idMap[id].map(i => elementRegistry.get(i))
+      else if(elementRegistry.get(id).type === "bpmn:Task")
+        element = elementRegistry.get(id)
+    })
+    
+
+    if(element != null)
+      modeling.setColor(element, {
+        stroke: obj.fillColor !== "#ffffff" ? obj.fillColor : "green",
+        fill: '#fff'
+      });
+
+
+  })
+
+}
+
+CustomModeler.prototype.setModelOpen = function(bool) {
+  this.modelOpen = bool;
+}
+
+CustomModeler.prototype.isModelOpen = function() {
+  return this.modelOpen;
+}
 
 CustomModeler.prototype._addCustomConnection = function(customElement) {
   this._customElements.push(customElement);
@@ -89,6 +124,8 @@ CustomModeler.prototype.addCustomElements = function(customElements) {
 
   var shapes = [],
       connections = [];
+
+  this._idMap = customElements.idMap;
 
   customElements.diagram.forEach(function(customElement) {
     if (isCustomConnection(customElement)) {
@@ -178,25 +215,30 @@ function parseTime2(time) {
 
 }
 
+function getSide(text) {
+  if(text === 'S')
+    return 'Start'
+  else if(text === 'E')
+    return 'End'
+  else
+    return text
+}
+
 function parseTime(text, bool) {
   if(text == null)
     return null
-  let pos = text.search(/[ \d]/);
-  if(pos === -1)
-    console.error("Time is in an invalid form.")
 
-  let timeString = text.substring(pos).trim();
-  let pos2 = timeString.search(/[ \D]/);
   let reg ="(<|<=|>|>=|==|!=)[ ]*([0-9]+)[ ]*(.*)";
   if(bool)
-    reg = "(Start|End)(-(Start|End))*[ ]*" + reg
+    reg = "(F|Forced)?(Start|S|End|E)(-(Start|S|End|E))?[ ]*" + reg
   let obj = text.match(new RegExp(reg))
   return {
-    sourceSide: obj[1],
-    targetSide: obj[3],
-    ineq: obj[4],
-    time: obj[5],
-    timeUnit: obj[6],
+    forced: obj[1] != null && (obj[1] === 'F' || obj[1] === 'Forced'),
+    sourceSide: getSide(obj[2]),
+    targetSide: getSide(obj[4]),
+    ineq: obj[5],
+    time: obj[6],
+    timeUnit: obj[7],
   }
 }
 
@@ -279,7 +321,6 @@ function createRRG(item, type) {
 }
 
 function createTimeInstance(item) {
-  console.log(item.text)
   let obj = item.text.match(new RegExp("(Before|After)[ ]*(Start|End)?[ ]*(.*)"))
   console.log(obj)
 
@@ -346,6 +387,7 @@ CustomModeler.prototype.getJson = function () {
     timeSlots: [],
     timeConnections: []
   }
+
   obj = this._customElements.reduce((res, item) => {
 
     if(isCustomConnection(item)) {
@@ -371,6 +413,8 @@ CustomModeler.prototype.getJson = function () {
     return res;
   }, obj);
 
+  let idMap = {}
+
   let elements = obj.timeSlots.reduce((res, obj) => {
     res[obj.id] = {
       occurrences: 0,
@@ -392,7 +436,9 @@ CustomModeler.prototype.getJson = function () {
     }
     else if(item.occurrences === 1) {
       if(item.connections[0].type === 'custom:ResourceArc') {
-        obj.taskDurations.push(createTaskDuration(item, item.timeSlot.text))
+        let taskDuration = createTaskDuration(item, item.timeSlot.text)
+        obj.taskDurations.push(taskDuration)
+        idMap[taskDuration.id] = [item.timeSlot.id, item.connections[0].id]
       }
       else {
         console.error("TimeSlot with wrong connection")
@@ -402,30 +448,46 @@ CustomModeler.prototype.getJson = function () {
       console.error("TimeSlot with too many connections")
     }
     else {
-      if((item.connections[0].type === 'custom:ResourceArc' && item.connections[1].type === 'custom:ConsequenceFlow'))
-        obj.consequencesTimed.push(createConsequenceTimed({
+      let constraint;
+      if((item.connections[0].type === 'custom:ResourceArc' && item.connections[1].type === 'custom:ConsequenceFlow')) {
+        constraint = createConsequenceTimed({
           id: 'ConsequenceTimedFlow_' + counter,
           source: item.connections[0].source,
           target: item.connections[1].target,
-        }, item.timeSlot.text))
-      else if(item.connections[1].type === 'custom:ResourceArc' && item.connections[0].type === 'custom:ConsequenceFlow')
-        obj.consequencesTimed.push(createConsequenceTimed({
+        }, item.timeSlot.text)
+
+        obj.consequencesTimed.push(constraint)
+      }
+      else if(item.connections[1].type === 'custom:ResourceArc' && item.connections[0].type === 'custom:ConsequenceFlow') {
+        constraint = createConsequenceTimed({
           id: 'ConsequenceTimedFlow_' + counter,
           source: item.connections[1].source,
           target: item.connections[0].target,
-        }, item.timeSlot.text))
-      else if((item.connections[0].type === 'custom:TimeDistanceArcStart' && item.connections[1].type === 'custom:TimeDistanceArcEnd'))
-        obj.timeDistances.push(createTimeDistance({
+        }, item.timeSlot.text)
+
+        obj.consequencesTimed.push(constraint)
+      }
+      else if((item.connections[0].type === 'custom:TimeDistanceArcStart' && item.connections[1].type === 'custom:TimeDistanceArcEnd')) {
+        constraint = createTimeDistance({
           id: 'TimeDistance_'+counter,
           source: item.connections[0].source,
           target: item.connections[1].target,
-        }, item.timeSlot.text))
-      else if(item.connections[1].type === 'custom:TimeDistanceArcStart' && item.connections[0].type === 'custom:TimeDistanceArcEnd')
-        obj.timeDistances.push(createTimeDistance({
+        }, item.timeSlot.text)
+
+        obj.timeDistances.push(constraint)
+      }
+      else if(item.connections[1].type === 'custom:TimeDistanceArcStart' && item.connections[0].type === 'custom:TimeDistanceArcEnd') {
+        constraint = createTimeDistance({
           id: 'TimeDistance_'+counter,
           source: item.connections[1].source,
           target: item.connections[0].target,
-        }, item.timeSlot.text))
+        }, item.timeSlot.text)
+
+        obj.timeDistances.push(constraint)
+      }
+
+      idMap[constraint.id] = [item.timeSlot.id, ...item.connections.map(obj => obj.id)];
+
       counter++;
     }
   })
@@ -438,9 +500,14 @@ CustomModeler.prototype.getJson = function () {
   // TimeDisStartArc + ts + tdea = TimeDistance
   //
   console.log(this._customElements)
-  console.log(obj)
+  console.log({
+    definitions: obj,
+    diagram: this._customElements,
+    idMap: idMap
+  })
   return {
     definitions: obj,
-    diagram: this._customElements
+    diagram: this._customElements,
+    idMap: idMap
   }
 }
