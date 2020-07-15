@@ -230,10 +230,10 @@ function parseTime(text, bool) {
 
   let reg ="(<|<=|>|>=|==|!=)[ ]*([0-9]+)[ ]*(.*)";
   if(bool)
-    reg = "(F|Forced)?(Start|S|End|E)(-(Start|S|End|E))?[ ]*" + reg
+    reg = "(NF|Not Forced|F|Forced)?[ ]*(Start|S|End|E)(-(Start|S|End|E))?[ ]*" + reg
   let obj = text.match(new RegExp(reg))
   return {
-    forced: obj[1] != null && (obj[1] === 'F' || obj[1] === 'Forced'),
+    forced: !(obj[1] != null && (obj[1] === 'NF' || obj[1] === 'Not Forced')),
     sourceSide: getSide(obj[2]),
     targetSide: getSide(obj[4]),
     ineq: obj[5],
@@ -257,6 +257,7 @@ function createConsequenceTimed(item, timeString) {
   let obj = parseTime(timeString, true)
   if(obj == null) return null
   return Object.assign(createConsequence(item), {
+    forced: obj.forced,
     timeData: {
       time: obj.time,
       timeUnit: obj.timeUnit,

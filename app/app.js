@@ -239,7 +239,7 @@ $(function() {
     })
   });
 
-  $('#js-create-diagram').click(function(e) {
+  $('.js-create-diagram').click(function(e) {
     e.stopPropagation();
     e.preventDefault();
 
