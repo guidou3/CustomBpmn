@@ -438,8 +438,10 @@ CustomModeler.prototype.getJson = function () {
     else if(item.occurrences === 1) {
       if(item.connections[0].type === 'custom:ResourceArc') {
         let taskDuration = createTaskDuration(item, item.timeSlot.text)
-        obj.taskDurations.push(taskDuration)
         idMap[taskDuration.id] = [item.timeSlot.id, item.connections[0].id]
+        taskDuration.elements = [item.timeSlot.id, item.connections[0].id]
+        obj.taskDurations.push(taskDuration)
+
       }
       else {
         console.error("TimeSlot with wrong connection")

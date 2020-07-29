@@ -61,7 +61,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
       align: align,
       padding: 5,
       style: {
-        fill: '#000'
+        fill: element.color
       }
     });
   }
@@ -80,7 +80,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
           {},
           textRenderer.getExternalStyle(),
           {
-            fill: '#000'
+            fill: element.color
           }
       )
     });
@@ -317,7 +317,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
 
   function drawTimeSlot(width, height, color) {
     var attrs = computeStyle(attrs, {
-      stroke: color,
+      stroke: color || '#fff',
       strokeWidth: 2,
       fill: '#fff'
     });
@@ -340,7 +340,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     var pathData = createPathFromConnection(element);
     var attrs = {
       strokeLinejoin: 'round',
-      stroke: BLACK,
+      stroke: element.color || BLACK,
       strokeWidth: 1.5
     };
 
@@ -394,7 +394,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
       svgAttr(path, {
         width: element.width,
         height: element.height,
-        color: element.color,
+        color: element.color || '#fff',
         d: componentsToPath(d)
       });
 
@@ -406,7 +406,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     },
     'custom:Resource': (p, element) => {
       var attrs = computeStyle(attrs, {
-        stroke: '#000',
+        stroke: element.color || BLACK,
         strokeWidth: 2,
         fill: '#fff'
       });
@@ -447,7 +447,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     },
     'custom:ResourceAbsence': (p, element) => {
       var attrs = computeStyle(attrs, {
-        stroke: '#000',
+        stroke: element.color || BLACK,
         strokeWidth: 2,
         fill: '#fff'
       });
@@ -492,7 +492,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     'custom:Role': (p, element) => {
 
       var attrs = computeStyle(attrs, {
-        stroke: '#000',
+        stroke: element.color || BLACK,
         strokeWidth: 2,
         fill: '#fff'
       });
@@ -539,7 +539,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     'custom:RoleAbsence': (p, element) => {
 
       var attrs = computeStyle(attrs, {
-        stroke: '#000',
+        stroke: element.color || BLACK,
         strokeWidth: 2,
         fill: '#fff'
       });
@@ -589,7 +589,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     },
     'custom:Group': (p, element, bool=false) => {
       var attrs = computeStyle(attrs, {
-        stroke: '#000',
+        stroke: element.color || BLACK,
         strokeWidth: 2,
         fill: '#fff'
       });
@@ -670,7 +670,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     // },
     'custom:ResourceArc': (p, element) => {
       var attrs = computeStyle(attrs, {
-        stroke: BLACK,
+        stroke: element.color || BLACK,
         strokeWidth: 1.5,
         strokeDasharray: [10,7]
       });
@@ -680,8 +680,8 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     'custom:ConsequenceFlow': (p, element) => {
       var attrs = {
         strokeLinejoin: 'round',
-        markerEnd: marker('sequenceflow-end', 'white', BLACK),
-        stroke: BLACK,
+        markerEnd: marker('sequenceflow-end', 'white', element.color),
+        stroke: element.color || BLACK,
         strokeWidth: 1.5,
         strokeDasharray: [8,5]
       };
@@ -690,7 +690,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     },
     'custom:TimeDistanceArcStart': (p, element) => {
       var attrs = {
-        markerStart: marker('timedistance-start', 'white', BLACK),
+        markerStart: marker('timedistance-start', 'white', element.color),
       };
 
       return drawTimeDistanceArc(p, element, attrs)
@@ -698,7 +698,7 @@ export default function CustomRenderer(eventBus, styles, canvas, textRenderer) {
     },
     'custom:TimeDistanceArcEnd': (p, element) => {
       var attrs = {
-        markerEnd: marker('timedistance-end', 'white', BLACK),
+        markerEnd: marker('timedistance-end', 'white', element.color),
       };
 
       return drawTimeDistanceArc(p, element, attrs)
