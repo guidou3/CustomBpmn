@@ -896,6 +896,8 @@ CustomRenderer.prototype.getShapePath = function(shape) {
 CustomRenderer.prototype.drawConnection = function(p, element) {
   var type = element.type;
   var h = this.renderers[type];
+  if(element.color == null)
+    element.color= "#000"
 
   /* jshint -W040 */
   return h(p, element);

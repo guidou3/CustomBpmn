@@ -230,12 +230,13 @@ function parseTime(text, bool) {
 
   let reg ="(<|<=|>|>=|==|!=)[ ]*([0-9]+)[ ]*(.*)";
   if(bool)
-    reg = "(NF|Not Forced|F|Forced)?[ ]*(Start|S|End|E)(-(Start|S|End|E))?[ ]*" + reg
+    reg = "(NF|Not Forced|F|Forced)?[ ]*(Start|S|End|E)?(-(Start|S|End|E))?[ ]*" + reg
   let obj = text.match(new RegExp(reg))
+  console.log(obj)
   return {
     forced: !(obj[1] != null && (obj[1] === 'NF' || obj[1] === 'Not Forced')),
-    sourceSide: getSide(obj[2]),
-    targetSide: getSide(obj[4]),
+    sourceSide: getSide(obj[2]) || 'End',
+    targetSide: getSide(obj[4]) || 'End',
     ineq: obj[5],
     time: obj[6],
     timeUnit: obj[7],
@@ -274,7 +275,8 @@ function createTimeDistance(item, timeString) {
   return {
     id: item.id,
     type: 'TimeDistance',
-    side: obj.sourceSide,
+    sourceSide: obj.sourceSide,
+    targetSide: obj.targetSide,
     source: item.source,
     target: item.target,
     timeData: {
@@ -322,15 +324,15 @@ function createRRG(item, type) {
 }
 
 function createTimeInstance(item) {
-  let obj = item.text.match(new RegExp("(Before|After)[ ]*(Start|End)?[ ]*(.*)"))
+  let obj = item.text.match(new RegExp("(Start|End)?[ ]*(Before|After)[ ]*(.*)"))
   console.log(obj)
 
   return {
     id: item.id,
     type: "TimeInstance",
     task: null,
-    side: obj[1] === "Before" ? 'Start' : 'End',
-    transitionSide: obj[2] || 'End', //TODO: implementare la posizione di partenza / fine
+    side: obj[2] === "Before" ? 'Start' : 'End',
+    transitionSide: obj[1] || 'End', 
     timestamp: obj[3]
   }
 }
